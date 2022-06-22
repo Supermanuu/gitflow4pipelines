@@ -1,0 +1,16 @@
+
+version: "3.3"
+services:
+  image:
+    image: 192.168.0.119:50000/version
+    build: .
+  version-test:
+    image: 192.168.0.119:50000/version
+    command: /getVersion.sh test amd64
+    volumes:
+      - ./test/:/home/root/workdir/
+  version-increase-test:
+    image: 192.168.0.119:50000/version
+    command: /increaseVersion.sh test amd64
+    volumes:
+      - ./test/:/home/root/workdir/
