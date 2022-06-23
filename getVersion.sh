@@ -8,9 +8,11 @@ ENV_FILE='/home/root/workdir/.env'
 
 ls $ENV_FILE &>/dev/null || (echo "Env file not found on $ENV_FILE" && exit 1)
 
-PROJECT_VERSION_MAJOR=$(grep -Eo '^PROJECT_VERSION_MAJOR=[0-9]+' $ENV_FILE | grep -Eo '[0-9]+')
-PROJECT_VERSION_MINOR=$(grep -Eo '^PROJECT_VERSION_MINOR=[0-9]+' $ENV_FILE | grep -Eo '[0-9]+')
-PROJECT_VERSION_PATCH=$(grep -Eo '^PROJECT_VERSION_PATCH=[0-9]+' $ENV_FILE | grep -Eo '[0-9]+')
+if [ "$READ" != "NO" ]; then
+    PROJECT_VERSION_MAJOR=$(grep -Eo '^PROJECT_VERSION_MAJOR=[0-9]+' $ENV_FILE | grep -Eo '[0-9]+')
+    PROJECT_VERSION_MINOR=$(grep -Eo '^PROJECT_VERSION_MINOR=[0-9]+' $ENV_FILE | grep -Eo '[0-9]+')
+    PROJECT_VERSION_PATCH=$(grep -Eo '^PROJECT_VERSION_PATCH=[0-9]+' $ENV_FILE | grep -Eo '[0-9]+')
+fi
 
 [ -z "$PROJECT_VERSION_MAJOR" \
     -o -z "$PROJECT_VERSION_MINOR" \
