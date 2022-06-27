@@ -6,16 +6,36 @@ services:
     build: .
   version-test:
     image: 192.168.0.119:50000/version
-    command: /getVersion.sh test amd64
+    command: version.py
     volumes:
       - ./test/:/home/root/workdir/
-  version-increase-test:
+  package-test:
     image: 192.168.0.119:50000/version
-    command: /increaseVersion.sh test amd64
+    command: version.py -p test -a amd64
     volumes:
       - ./test/:/home/root/workdir/
-  version-change-test:
+  next-version-test:
     image: 192.168.0.119:50000/version
-    command: /bin/bash -c "CHANGE=YES /increaseVersion.sh test amd64"
+    command: version.py --next
     volumes:
       - ./test/:/home/root/workdir/
+  next-fix-version-test:
+    image: 192.168.0.119:50000/version
+    command: version.py --next-fix -a lol
+    volumes:
+      - ./test/:/home/root/workdir/
+  next-hotfix-version-test:
+    image: 192.168.0.119:50000/version
+    command: version.py --next-hotfix
+    volumes:
+      - ./test/:/home/root/workdir/
+  change-version-test:
+    image: 192.168.0.119:50000/version
+    command: version.py --next -w
+    volumes:
+      - ./test/:/home/root/workdir/
+  check:
+    image: hadolint/hadolint
+    command: hadolint /var/repo/Dockerfile
+    volumes:
+      - ./:/var/repo
