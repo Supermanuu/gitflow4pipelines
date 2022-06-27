@@ -39,3 +39,11 @@ services:
     command: hadolint /var/repo/Dockerfile
     volumes:
       - ./:/var/repo
+  brancheck-test:
+    image: 192.168.0.119:50000/version
+    command: brancheck.py $SOURCE $TARGET
+    volumes:
+      - ./test/:/home/root/workdir/
+    environment:
+      - SOURCE
+      - TARGET
