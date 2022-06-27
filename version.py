@@ -43,8 +43,9 @@ if __name__ == '__main__':
         found = versions.findall(line)
         if len(found) > 0:
             version_dict[found[0][0]]=found[0][1]
-        else:
-            print("Bad env file", file=sys.stderr)
+    if not all(k in version_dict for k in ('MAJOR', 'MINOR', 'PATCH', 'FIX', 'HOTFIX')):
+        print("Bad env file", file=sys.stderr)
+        sys.exit(1)
 
     if args.next:           version_dict['PATCH'] = str(int(version_dict['PATCH']) + 1)
     if args.next_fix:       version_dict['FIX'] = str(int(version_dict['FIX']) + 1)
