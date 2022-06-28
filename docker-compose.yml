@@ -41,9 +41,6 @@ services:
       - ./:/var/repo
   brancheck-test:
     image: 192.168.0.119:50000/version
-    command: brancheck.py $SOURCE $TARGET
+    command: brancheck.py refs/heads/feature/lol refs/heads/development
     volumes:
       - ./test/:/home/root/workdir/
-    environment:
-      - SOURCE
-      - TARGET
