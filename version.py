@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import re
 import sys
 import argparse
@@ -39,10 +40,13 @@ if __name__ == '__main__':
         lines = f.readlines()
 
     version_dict={}
+    rest_of_the_env=[]
     for line in lines:
         found = versions.findall(line)
         if len(found) > 0:
             version_dict[found[0][0]]=found[0][1]
+        else:
+            rest_of_the_env.append(line)
     if not all(k in version_dict for k in ('MAJOR', 'MINOR', 'PATCH', 'FIX', 'HOTFIX')):
         print("Bad env file", file=sys.stderr)
         sys.exit(1)
@@ -70,3 +74,4 @@ if __name__ == '__main__':
     if args.write:
         with open(args.env_path, 'w') as f:
             f.write(new_content)
+            f.write(''.join(rest_of_the_env))

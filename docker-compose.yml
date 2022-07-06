@@ -4,43 +4,46 @@ services:
   image:
     image: 192.168.0.119:50000/version
     build: .
+    network_mode: &nmode "host"
   version-test:
     image: 192.168.0.119:50000/version
     command: version.py
-    volumes:
+    volumes: &volumes
       - ./test/:/home/root/workdir/
+    network_mode: *nmode
   package-test:
     image: 192.168.0.119:50000/version
     command: version.py -p test -a amd64
-    volumes:
-      - ./test/:/home/root/workdir/
+    volumes: *volumes
+    network_mode: *nmode
   next-version-test:
     image: 192.168.0.119:50000/version
     command: version.py --next
-    volumes:
-      - ./test/:/home/root/workdir/
+    volumes: *volumes
+    network_mode: *nmode
   next-fix-version-test:
     image: 192.168.0.119:50000/version
     command: version.py --next-fix -a lol
-    volumes:
-      - ./test/:/home/root/workdir/
+    volumes: *volumes
+    network_mode: *nmode
   next-hotfix-version-test:
     image: 192.168.0.119:50000/version
     command: version.py --next-hotfix
-    volumes:
-      - ./test/:/home/root/workdir/
+    volumes: *volumes
+    network_mode: *nmode
   change-version-test:
     image: 192.168.0.119:50000/version
     command: version.py --next -w
-    volumes:
-      - ./test/:/home/root/workdir/
+    volumes: *volumes
+    network_mode: *nmode
   check:
     image: hadolint/hadolint
     command: hadolint /var/repo/Dockerfile
     volumes:
       - ./:/var/repo
+    network_mode: *nmode
   brancheck-test:
     image: 192.168.0.119:50000/version
     command: brancheck.py refs/heads/feature/lol refs/heads/development
-    volumes:
-      - ./test/:/home/root/workdir/
+    volumes: *volumes
+    network_mode: *nmode
