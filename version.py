@@ -64,7 +64,7 @@ if __name__ == '__main__':
     if not all(k in version_dict for k in ('MAJOR', 'MINOR', 'PATCH', 'FIX', 'HOTFIX')):
         print("Bad env file", file=sys.stderr)
         sys.exit(1)
-    orig_version_dict = version_dict
+    orig_version_dict = version_dict.copy()
 
     if args.next:           version_dict['PATCH'] = str(int(version_dict['PATCH']) + 1)
     if args.next_fix:       version_dict['FIX'] = str(int(version_dict['FIX']) + 1)
