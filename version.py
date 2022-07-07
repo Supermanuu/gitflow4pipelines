@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-import os
 import re
 import sys
 import argparse
+import subprocess
 
 versions = re.compile(r'^PROJECT_VERSION_([^=]+)=(\d+)$')
 
@@ -15,15 +15,26 @@ if __name__ == '__main__':
                         help='Package name definition')
     parser.add_argument('-a', metavar='architecture', type=str,
                         help='Architecture definition')
-    parser.add_argument('--next', action="store_true",
+    advance = parser.add_argument_group("Version increase options")
+    advance.add_argument('--next', action="store_true",
                         help='Increase minor version')
-    parser.add_argument('--next-fix', action="store_true",
+    advance.add_argument('--next-fix', action="store_true",
                         help='Increase major version')
-    parser.add_argument('--next-hotfix', action="store_true",
+    advance.add_argument('--next-hotfix', action="store_true",
                         help='Increase patch version')
     parser.add_argument('-w', '--write', action="store_true",
                         help='Writes the change in the .env file')
-    show = parser.add_mutually_exclusive_group()
+    git = parser.add_argument_group("Git management options")
+    git.add_argument('-c', '--commit', action="store", nargs=1, metavar="MESSAGE",
+                        help='Commits changes into git repository')
+    git.add_argument('-u', '--user-email', action="store", nargs=2, metavar=("USER", "EMAIL"),
+                        help='Git user and email configuration')
+    git.add_argument('--private-key', action="store", nargs=1,
+                        help='SSH private key')
+    git.add_argument('--private-key-dir', action="store", nargs=1, type=str, default='/root/.ssh',
+                        help='SSH private key')
+    showg = parser.add_argument_group("Output one value")
+    show = showg.add_mutually_exclusive_group()
     show.add_argument('--minor', action="store_true",
                         help='Shows minor version')
     show.add_argument('--major', action="store_true",
@@ -61,11 +72,12 @@ if __name__ == '__main__':
     elif args.fix:      print(version_dict['FIX'])
     elif args.hotfix:   print(version_dict['HOTFIX'])
     else:
-        version_str = [args.p, str(version_dict['MAJOR'] + "." +
-            version_dict['MINOR'] + "." +
-            version_dict['PATCH'] +
-            ("f" + version_dict['FIX'] if int(version_dict['FIX']) > 0 else "") +
-            ("h" + version_dict['HOTFIX'] if int(version_dict['HOTFIX']) > 0 else "")), args.a]
+        major_minor_patch = version_dict['MAJOR'] + "." \
+            + version_dict['MINOR'] + "." \
+            + version_dict['PATCH']
+        version_str = [args.p, str(major_minor_patch
+            + ("f" + version_dict['FIX'] if int(version_dict['FIX']) > 0 else "")
+            + ("h" + version_dict['HOTFIX'] if int(version_dict['HOTFIX']) > 0 else "")), args.a]
         print('_'.join(filter(None, version_str)))
 
     new_content=""
@@ -75,3 +87,20 @@ if __name__ == '__main__':
         with open(args.env_path, 'w') as f:
             f.write(new_content)
             f.write(''.join(rest_of_the_env))
+        if args.private_key:
+            subprocess.call(["mkdir", "-p", args.private_key_dir])
+            with open(args.private_key_dir + "/id_rsa", 'w') as k:
+                k.write(args.private_key[0] + "\n")
+            subprocess.call(["chmod", "600", args.private_key_dir + "/id_rsa"])
+            subprocess.call(["chown", "root:root", args.private_key_dir + "/id_rsa"])
+        if args.user_email \
+            and (subprocess.call(["git", "config", "user.name", args.user_email[0]]) != 0 \
+            or subprocess.call(["git", "config", "user.email", args.user_email[1]]) != 0):
+                raise RuntimeError("Failed to set git config")
+        if args.commit \
+            and (subprocess.call(["git", "add", args.env_path]) != 0 \
+            or subprocess.call(["git", "commit", "-m", "[skip ci] Generating new version " + major_minor_patch]) != 0 \
+            or subprocess.call(["git", "tag", "-a", major_minor_patch, "-m", args.commit[0]]) != 0 \
+            or subprocess.call(["git", "push"]) != 0 \
+            or subprocess.call(["git", "push", "--tags"]) != 0):
+                raise RuntimeError("Failed to commit and tag new version")

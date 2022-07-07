@@ -36,6 +36,14 @@ services:
     command: version.py --next -w
     volumes: *volumes
     network_mode: *nmode
+  commit-version-test:
+    image: 192.168.0.119:50000/version
+    command: version.py -e test/.env --next -w -c "test tag" -u "Manuel Pascual López" "manuel.pascual@sedecal.com" --private-key "$PRIVATE_KEY"
+    volumes:
+      - ./:/home/root/workdir/
+    network_mode: *nmode
+    environment:
+      - PRIVATE_KEY # export PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"
   check:
     image: hadolint/hadolint
     command: hadolint /var/repo/Dockerfile
