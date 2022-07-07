@@ -7,6 +7,9 @@ import subprocess
 
 versions = re.compile(r'^PROJECT_VERSION_([^=]+)=(\d+)$')
 
+def format_version(version_dict):
+    return version_dict['MAJOR'] + "." + version_dict['MINOR'] + "." + version_dict['PATCH']
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Manages the version change in a .env file.')
     parser.add_argument('-e', '--env-path', type=str, default='./.env',
@@ -61,6 +64,7 @@ if __name__ == '__main__':
     if not all(k in version_dict for k in ('MAJOR', 'MINOR', 'PATCH', 'FIX', 'HOTFIX')):
         print("Bad env file", file=sys.stderr)
         sys.exit(1)
+    orig_version_dict = version_dict
 
     if args.next:           version_dict['PATCH'] = str(int(version_dict['PATCH']) + 1)
     if args.next_fix:       version_dict['FIX'] = str(int(version_dict['FIX']) + 1)
@@ -72,10 +76,7 @@ if __name__ == '__main__':
     elif args.fix:      print(version_dict['FIX'])
     elif args.hotfix:   print(version_dict['HOTFIX'])
     else:
-        major_minor_patch = version_dict['MAJOR'] + "." \
-            + version_dict['MINOR'] + "." \
-            + version_dict['PATCH']
-        version_str = [args.p, str(major_minor_patch
+        version_str = [args.p, str(format_version(version_dict)
             + ("f" + version_dict['FIX'] if int(version_dict['FIX']) > 0 else "")
             + ("h" + version_dict['HOTFIX'] if int(version_dict['HOTFIX']) > 0 else "")), args.a]
         print('_'.join(filter(None, version_str)))
@@ -100,9 +101,9 @@ if __name__ == '__main__':
         if args.commit:
             commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf8").replace("\n", "")
             tag_messagge = subprocess.check_output(["git", "log", "--format=%B", "-n", "1", commit_hash]).decode("utf8").replace("\n", "")
-            if subprocess.call(["git", "add", args.env_path]) != 0 \
-            or subprocess.call(["git", "commit", "-m", "[skip ci] Generating new version " + major_minor_patch]) != 0 \
-            or subprocess.call(["git", "tag", "-a", major_minor_patch, "-m", tag_messagge]) != 0 \
-            or subprocess.call(["git", "push"]) != 0 \
-            or subprocess.call(["git", "push", "--tags"]) != 0:
-                raise RuntimeError("Failed to commit and tag new version")
+            if subprocess.call(["git", "tag", "-a", format_version(orig_version_dict), "-m", tag_messagge]) != 0 \
+                or subprocess.call(["git", "add", args.env_path]) != 0 \
+                or subprocess.call(["git", "commit", "-m", "[skip ci] Increase version to " + format_version(version_dict)]) != 0 \
+                or subprocess.call(["git", "push"]) != 0 \
+                or subprocess.call(["git", "push", "--tags"]) != 0:
+                    raise RuntimeError("Failed to commit and tag new version")
