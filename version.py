@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--write', action="store_true",
                         help='Writes the change in the .env file')
     git = parser.add_argument_group("Git management options")
-    git.add_argument('-c', '--commit', action="store", nargs=1, metavar="MESSAGE",
+    git.add_argument('-c', '--commit', action="store_true",
                         help='Commits changes into git repository')
     git.add_argument('-u', '--user-email', action="store", nargs=2, metavar=("USER", "EMAIL"),
                         help='Git user and email configuration')
@@ -97,10 +97,12 @@ if __name__ == '__main__':
             and (subprocess.call(["git", "config", "user.name", args.user_email[0]]) != 0 \
             or subprocess.call(["git", "config", "user.email", args.user_email[1]]) != 0):
                 raise RuntimeError("Failed to set git config")
-        if args.commit \
-            and (subprocess.call(["git", "add", args.env_path]) != 0 \
+        if args.commit:
+            commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf8").replace("\n", "")
+            tag_messagge = subprocess.check_output(["git", "log", "--format=%B", "-n", "1", commit_hash]).decode("utf8").replace("\n", "")
+            if subprocess.call(["git", "add", args.env_path]) != 0 \
             or subprocess.call(["git", "commit", "-m", "[skip ci] Generating new version " + major_minor_patch]) != 0 \
-            or subprocess.call(["git", "tag", "-a", major_minor_patch, "-m", args.commit[0]]) != 0 \
+            or subprocess.call(["git", "tag", "-a", major_minor_patch, "-m", tag_messagge]) != 0 \
             or subprocess.call(["git", "push"]) != 0 \
-            or subprocess.call(["git", "push", "--tags"]) != 0):
+            or subprocess.call(["git", "push", "--tags"]) != 0:
                 raise RuntimeError("Failed to commit and tag new version")

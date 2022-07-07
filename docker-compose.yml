@@ -38,7 +38,7 @@ services:
     network_mode: *nmode
   commit-version-test:
     image: 192.168.0.119:50000/version
-    command: version.py -e test/.env --next -w -c "test tag" -u "Manuel Pascual López" "manuel.pascual@sedecal.com" --private-key "$PRIVATE_KEY"
+    command: version.py -e test/.env --next -w -c -u "Manuel Pascual López" "manuel.pascual@sedecal.com" --private-key "$PRIVATE_KEY"
     volumes:
       - ./:/home/root/workdir/
     network_mode: *nmode
