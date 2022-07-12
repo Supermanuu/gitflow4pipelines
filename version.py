@@ -8,7 +8,10 @@ import subprocess
 versions = re.compile(r'^PROJECT_VERSION_([^=]+)=(\d+)$')
 
 def format_version(version_dict):
-    return version_dict['MAJOR'] + "." + version_dict['MINOR'] + "." + version_dict['PATCH']
+    if int(version_dict['REVISION']) > 0:
+        return version_dict['REVISION'] + ":" + version_dict['MAJOR'] + "." + version_dict['MINOR'] + "." + version_dict['PATCH']
+    else:
+        return version_dict['MAJOR'] + "." + version_dict['MINOR'] + "." + version_dict['PATCH']
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Manages the version change in a .env file.')
@@ -21,10 +24,8 @@ if __name__ == '__main__':
     advance = parser.add_argument_group("Version increase options")
     advance.add_argument('--next', action="store_true",
                         help='Increase minor version')
-    advance.add_argument('--next-fix', action="store_true",
-                        help='Increase major version')
-    advance.add_argument('--next-hotfix', action="store_true",
-                        help='Increase patch version')
+    advance.add_argument('--next-revision', action="store_true",
+                        help='Increase revision version')
     parser.add_argument('-w', '--write', action="store_true",
                         help='Writes the change in the .env file')
     git = parser.add_argument_group("Git management options")
@@ -44,10 +45,8 @@ if __name__ == '__main__':
                         help='Shows major version')
     show.add_argument('--patch', action="store_true",
                         help='Shows patch version')
-    show.add_argument('--fix', action="store_true",
-                        help='Shows fix version')
-    show.add_argument('--hotfix', action="store_true",
-                        help='Shows hotfix version')
+    show.add_argument('--revision', action="store_true",
+                        help='Shows revision version')
     args = parser.parse_args(sys.argv[1:])
 
     with open(args.env_path) as f:
@@ -61,24 +60,20 @@ if __name__ == '__main__':
             version_dict[found[0][0]]=found[0][1]
         else:
             rest_of_the_env.append(line)
-    if not all(k in version_dict for k in ('MAJOR', 'MINOR', 'PATCH', 'FIX', 'HOTFIX')):
+    if not all(k in version_dict for k in ('MAJOR', 'MINOR', 'PATCH', 'REVISION')):
         print("Bad env file", file=sys.stderr)
         sys.exit(1)
     orig_version_dict = version_dict.copy()
 
-    if args.next:           version_dict['PATCH'] = str(int(version_dict['PATCH']) + 1)
-    if args.next_fix:       version_dict['FIX'] = str(int(version_dict['FIX']) + 1)
-    if args.next_hotfix:    version_dict['HOTFIX'] = str(int(version_dict['HOTFIX']) + 1)
+    if args.next:               version_dict['PATCH'] = str(int(version_dict['PATCH']) + 1)
+    if args.next_revision:      version_dict['REVISION'] = str(int(version_dict['REVISION']) + 1)
 
     if args.major:      print(version_dict['MAJOR'])
     elif args.minor:    print(version_dict['MINOR'])
     elif args.patch:    print(version_dict['PATCH'])
-    elif args.fix:      print(version_dict['FIX'])
-    elif args.hotfix:   print(version_dict['HOTFIX'])
+    elif args.revision: print(version_dict['REVISION'])
     else:
-        version_str = [args.p, str(format_version(version_dict)
-            + ("f" + version_dict['FIX'] if int(version_dict['FIX']) > 0 else "")
-            + ("h" + version_dict['HOTFIX'] if int(version_dict['HOTFIX']) > 0 else "")), args.a]
+        version_str = [args.p, format_version(version_dict), args.a]
         print('_'.join(filter(None, version_str)))
 
     new_content=""
