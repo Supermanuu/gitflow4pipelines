@@ -21,14 +21,9 @@ services:
     command: version.py --next
     volumes: *volumes
     network_mode: *nmode
-  next-fix-version-test:
+  next-revision-version-test:
     image: 192.168.0.119:50000/version
-    command: version.py --next-fix -a lol
-    volumes: *volumes
-    network_mode: *nmode
-  next-hotfix-version-test:
-    image: 192.168.0.119:50000/version
-    command: version.py --next-hotfix
+    command: version.py --next-revision -a lol
     volumes: *volumes
     network_mode: *nmode
   change-version-test:
@@ -44,6 +39,8 @@ services:
     network_mode: *nmode
     environment:
       - PRIVATE_KEY # export PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"
+    profiles:
+      - donotstart # to avoid start on docker compose up
   check:
     image: hadolint/hadolint
     command: hadolint /var/repo/Dockerfile
