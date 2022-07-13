@@ -28,9 +28,9 @@ if __name__ == '__main__':
 
     good=False
     if args.target == development:
-        good = args.source.startswith(feature) or args.source.startswith(bug) or args.source == integration
+        good = args.source.startswith(feature) or args.source.startswith(bug)
     elif args.target == integration:
-        good = args.source.startswith(fix) or args.source == development or args.source == main
+        good = args.source.startswith(fix) or args.source == development
     elif args.target == main:
         good = args.source.startswith(hotfix) or args.source == integration
     else:
