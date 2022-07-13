@@ -101,7 +101,7 @@ if __name__ == '__main__':
             if c != 'BUILD':
                 new_content+='PROJECT_VERSION_' + c + '=' + v + '\n'
             else:
-                new_content+='PROJECT_VERSION_BUILD=0\n'
+                new_content+='PROJECT_VERSION_BUILD=0 # Filled out by CI\n'
 
         # File writing
         with open(args.env_path, 'w') as f:
