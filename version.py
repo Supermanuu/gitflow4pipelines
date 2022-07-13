@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import re
 import sys
 import argparse
@@ -68,6 +69,11 @@ if __name__ == '__main__':
         else:
             rest_of_the_env.append(line)
 
+    # Build ID environment value
+    buildId = os.getenv('PROJECT_VERSION_BUILD')
+    if buildId is not None:
+        version_dict['BUILD'] = buildId
+
     # Fields checking
     if not all(k in version_dict for k in ('MAJOR', 'MINOR', 'PATCH', 'REVISION', 'BUILD')):
         print("Bad env file", file=sys.stderr)
@@ -92,7 +98,10 @@ if __name__ == '__main__':
         # Content generation
         new_content=""
         for c,v in version_dict.items():
-            new_content+='PROJECT_VERSION_' + c + '=' + v + '\n'
+            if c != 'BUILD':
+                new_content+='PROJECT_VERSION_' + c + '=' + v + '\n'
+            else:
+                new_content+='PROJECT_VERSION_BUILD=0\n'
 
         # File writing
         with open(args.env_path, 'w') as f:

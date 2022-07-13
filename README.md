@@ -42,6 +42,12 @@ To increase the version number of the application you can run the following comm
 docker compose run -it --rm version-increase-test
 ```
 
+To run all tests you can run the following command:
+
+```
+docker compose up
+```
+
 # Important
 
 To make this work, you need to have a `.env` file in your repo. This will be used to manage the version number.

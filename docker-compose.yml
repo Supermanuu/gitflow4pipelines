@@ -31,6 +31,13 @@ services:
     command: version.py --next -w
     volumes: *volumes
     network_mode: *nmode
+  buildid-version-test:
+    image: 192.168.0.119:50000/version
+    command: version.py --next -w
+    volumes: *volumes
+    network_mode: *nmode
+    environment:
+      - PROJECT_VERSION_BUILD=10
   commit-version-test:
     image: 192.168.0.119:50000/version
     command: version.py -e test/.env --next -w -c -u "Manuel Pascual López" "manuel.pascual@sedecal.com" --private-key "$PRIVATE_KEY"
