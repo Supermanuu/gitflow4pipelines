@@ -9,12 +9,12 @@ import subprocess
 versions = re.compile(r'^PROJECT_VERSION_([^=]+)=([a-zA-Z0-9]+)(?: ?#.*)?$')
 
 # Version format definition as known by the DEB package documentation
-def format_version(version_dict, revisionSep=":"):
-    ret = version_dict['MAJOR'] + "." + version_dict['MINOR'] + "." + version_dict['PATCH']
-    if int(version_dict['REVISION']) > 0:
-        ret = version_dict['REVISION'] + revisionSep + ret
-    if version_dict['BUILD'] != "0":
-        ret = ret + "-" + version_dict['BUILD']
+def format_version(vd, revisionSep=":"):
+    ret = vd['MAJOR'] + "." + vd['MINOR'] + "." + vd['PATCH']
+    if int(vd['REVISION']) > 0:
+        ret = vd['REVISION'] + revisionSep + ret
+    if vd['BUILD'] != "0":
+        ret = ret + "-" + vd['BUILD']
     return ret
 
 if __name__ == '__main__':
