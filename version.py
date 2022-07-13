@@ -6,7 +6,7 @@ import sys
 import argparse
 import subprocess
 
-versions = re.compile(r'^PROJECT_VERSION_([^=]+)=([a-zA-Z0-9]+)$')
+versions = re.compile(r'^PROJECT_VERSION_([^=]+)=([a-zA-Z0-9]+)(?: ?#.*)?$')
 
 # Version format definition as known by the DEB package documentation
 def format_version(version_dict, revisionSep=":"):
