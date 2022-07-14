@@ -8,33 +8,33 @@ services:
   version-test:
     image: 192.168.0.119:50000/version
     command: version.py
-    volumes: &volumes
+    volumes: &test_volume
       - ./test/:/home/root/workdir/
     network_mode: *nmode
   package-test:
     image: 192.168.0.119:50000/version
     command: version.py -p test -a amd64
-    volumes: *volumes
+    volumes: *test_volume
     network_mode: *nmode
   next-version-test:
     image: 192.168.0.119:50000/version
     command: version.py --next
-    volumes: *volumes
+    volumes: *test_volume
     network_mode: *nmode
   next-revision-version-test:
     image: 192.168.0.119:50000/version
     command: version.py --next-revision -a lol
-    volumes: *volumes
+    volumes: *test_volume
     network_mode: *nmode
   change-version-test:
     image: 192.168.0.119:50000/version
     command: version.py --next -w
-    volumes: *volumes
+    volumes: *test_volume
     network_mode: *nmode
   buildid-version-test:
     image: 192.168.0.119:50000/version
     command: version.py --next -w
-    volumes: *volumes
+    volumes: *test_volume
     network_mode: *nmode
     environment:
       - PROJECT_VERSION_BUILD=10
@@ -57,5 +57,12 @@ services:
   brancheck-test:
     image: 192.168.0.119:50000/version
     command: brancheck.py refs/heads/feature/lol refs/heads/development
-    volumes: *volumes
+    volumes: *test_volume
     network_mode: *nmode
+  unit-tests: # run unit tests
+    image: python
+    command: python3 -m test.lastVersion_test
+    volumes:
+      - ./:/home/root/workdir/
+    network_mode: *nmode
+    working_dir: /home/root/workdir/
