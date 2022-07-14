@@ -34,8 +34,6 @@ if __name__ == '__main__':
     elif args.target == main:
         good = args.source.startswith(hotfix) or args.source == integration
     else:
-        print("Bad target branch", file=sys.stderr)
-        sys.exit(1)
+        raise RuntimeError("Bad target branch", file=sys.stderr)
     if not good:
-        print(f"Cannot merge from '{args.source}' to '{args.target}'", file=sys.stderr)
-        sys.exit(1)
+        raise RuntimeError(f"Cannot merge from '{args.source}' to '{args.target}'", file=sys.stderr)

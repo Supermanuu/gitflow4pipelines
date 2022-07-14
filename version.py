@@ -9,11 +9,11 @@ import subprocess
 versions = re.compile(r'^PROJECT_VERSION_([^=]+)=([a-zA-Z0-9]+)(?: ?#.*)?$')
 
 # Version format definition as known by the DEB package documentation
-def format_version(vd, revisionSep=":"):
+def format_version(vd, revisionSep=":", showBuild=True):
     ret = vd['MAJOR'] + "." + vd['MINOR'] + "." + vd['PATCH']
     if int(vd['REVISION']) > 0:
         ret = vd['REVISION'] + revisionSep + ret
-    if vd['BUILD'] != "0":
+    if vd['BUILD'] != "0" and showBuild:
         ret = ret + "-" + vd['BUILD']
     return ret
 
@@ -78,13 +78,15 @@ if __name__ == '__main__':
 
     # Fields checking
     if not all(k in version_dict for k in ('MAJOR', 'MINOR', 'PATCH', 'REVISION', 'BUILD')):
-        print("Bad env file", file=sys.stderr)
-        sys.exit(1)
+        raise RuntimeError("Bad env file", file=sys.stderr)
     orig_version_dict = version_dict.copy()
 
     # Increase options
-    if args.next:               version_dict['PATCH'] = str(int(version_dict['PATCH']) + 1)
-    if args.next_revision:      version_dict['REVISION'] = str(int(version_dict['REVISION']) + 1)
+    if args.next_revision:
+        version_dict['REVISION'] = str(int(version_dict['REVISION']) + 1)
+    if args.next:
+        version_dict['PATCH'] = str(int(version_dict['PATCH']) + 1)
+        version_dict['REVISION'] = '0'
 
     # Version prompt
     if args.major:      print(version_dict['MAJOR'])
@@ -135,7 +137,7 @@ if __name__ == '__main__':
             tag_messagge = subprocess.check_output(["git", "log", "--format=%B", "-n", "1", commit_hash]).decode("utf8").replace("\n", "")
             if subprocess.call(["git", "tag", "-a", format_version(orig_version_dict, revisionSep="r"), "-m", tag_messagge]) != 0 \
                 or subprocess.call(["git", "add", args.env_path]) != 0 \
-                or subprocess.call(["git", "commit", "-m", "[skip ci] Increase version to " + format_version(version_dict)]) != 0 \
+                or subprocess.call(["git", "commit", "-m", "[skip ci] Increase version to " + format_version(version_dict, showBuild=False)]) != 0 \
                 or subprocess.call(["git", "push"]) != 0 \
                 or subprocess.call(["git", "push", "--tags"]) != 0:
                     raise RuntimeError("Failed to commit and tag new version")
