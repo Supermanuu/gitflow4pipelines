@@ -22,8 +22,10 @@ def organizer(tag):
 def prettyTag(tag):
     return tag.replace("r",":")
 
+def get():
+    tags = subprocess.check_output(["git", "tag"]).decode("utf8").split("\n")
+    tags.remove("")
+    return prettyTag(sortTags(tags)[-1])
+
 if __name__ == '__main__':
-        # Commit and tag management
-        tags = subprocess.check_output(["git", "tag"]).decode("utf8").split("\n")
-        tags.remove("")
-        print(prettyTag(sortTags(tags)[-1]))
+        print(get())
