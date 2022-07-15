@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import re
 import subprocess
 
 def sortTag(tag):
@@ -16,7 +17,7 @@ def organizer(tag):
     if '-' not in tag:
         splittedTag.append('0') # by default 0 build
     splittedTag.insert(3, splittedTag.pop(0))
-    splittedTag[4] = 'b' + splittedTag[4] # to avoid digit to string comparison
+    splittedTag[4] = re.sub("[^0-9]", "", splittedTag[4]) # to avoid digit to string comparison and string to string comparison
     return splittedTag
 
 def prettyTag(tag):
