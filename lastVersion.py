@@ -23,7 +23,7 @@ def prettyTag(tag):
     return tag.replace("r",":")
 
 def get():
-    tags = subprocess.check_output(["git", "tag"]).decode("utf8").split("\n")
+    tags = subprocess.check_output(["git", "tag", "--merged"]).decode("utf8").split("\n")
     tags.remove("")
     return prettyTag(sortTags(tags)[-1])
 
