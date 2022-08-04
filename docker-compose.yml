@@ -31,6 +31,11 @@ services:
     command: version.py --next -w
     volumes: *test_volume
     network_mode: *nmode
+  change-revision-test:
+    image: 192.168.0.119:50000/version
+    command: version.py --next-revision -w
+    volumes: *test_volume
+    network_mode: *nmode
   buildid-version-test:
     image: 192.168.0.119:50000/version
     command: version.py --next -w

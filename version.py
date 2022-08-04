@@ -9,11 +9,20 @@ import subprocess
 versions = re.compile(r'^PROJECT_VERSION_([^=]+)=([a-zA-Z0-9]+)(?: ?#.*)?$')
 
 # Version format definition as known by the DEB package documentation
-def format_version(vd, revisionSep=":", showBuild=True):
+def format_deb_version(vd, showBuild=True):
     ret = vd['MAJOR'] + "." + vd['MINOR'] + "." + vd['PATCH']
     if int(vd['REVISION']) > 0:
-        ret = vd['REVISION'] + revisionSep + ret
+        ret = vd['REVISION'] + ":" + ret
     if vd['BUILD'] != "0" and showBuild:
+        ret = ret + "-" + vd['BUILD']
+    return ret
+
+# Version format definition as known by SEDECAL
+def format_SEDECAL_version(vd):
+    ret = vd['MAJOR'] + "." + vd['MINOR'] + "." + vd['PATCH']
+    if int(vd['REVISION']) > 0:
+        ret = ret + "." + vd['REVISION']
+    if vd['BUILD'] != "0":
         ret = ret + "-" + vd['BUILD']
     return ret
 
@@ -101,7 +110,7 @@ if __name__ == '__main__':
             import lastVersion
             version_str = [args.p, lastVersion.get(), args.a]
         else:
-            version_str = [args.p, format_version(version_dict), args.a]
+            version_str = [args.p, format_deb_version(version_dict), args.a]
         print('_'.join(filter(None, version_str)))
 
     if not args.last:
@@ -132,7 +141,7 @@ if __name__ == '__main__':
             # Tag management
             commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf8").replace("\n", "")
             tag_messagge = subprocess.check_output(["git", "log", "--format=%B", "-n", "1", commit_hash]).decode("utf8").replace("\n", "")
-            if subprocess.call(["git", "tag", "-a", format_version(orig_version_dict, revisionSep="r"), "-m", tag_messagge]) != 0 \
+            if subprocess.call(["git", "tag", "-a", format_SEDECAL_version(orig_version_dict), "-m", tag_messagge]) != 0 \
                 or subprocess.call(["git", "push", "--tags"]) != 0:
                     raise RuntimeError("Failed to tag this version")
 
@@ -145,6 +154,6 @@ if __name__ == '__main__':
 
             # Commit management
             if subprocess.call(["git", "add", args.env_path]) != 0 \
-                or subprocess.call(["git", "commit", "-m", "[skip ci] Increase version to " + format_version(version_dict, showBuild=False)]) != 0 \
+                or subprocess.call(["git", "commit", "-m", "[skip ci] Increase version to " + format_deb_version(version_dict, showBuild=False)]) != 0 \
                 or subprocess.call(["git", "push"]) != 0:
                     raise RuntimeError("Failed to commit new version")
