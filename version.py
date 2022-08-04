@@ -37,6 +37,8 @@ if __name__ == '__main__':
     git = parser.add_argument_group("Git management options")
     git.add_argument('-c', '--commit', action="store_true",
                         help='Commits changes into git repository')
+    git.add_argument('-t', '--tag', action="store_true",
+                        help='Tag this version into git repository')
     git.add_argument('-u', '--user-email', action="store", nargs=2, metavar=("USER", "EMAIL"),
                         help='Git user and email configuration')
     git.add_argument('--private-key', action="store", nargs=1,
@@ -117,7 +119,7 @@ if __name__ == '__main__':
                 f.write(new_content)
                 f.write(''.join(rest_of_the_env))
 
-        if args.commit:
+        if args.commit or args.tag:
             # Private key management
             if args.private_key:
                 subprocess.call(["mkdir", "-p", args.private_key_dir])
@@ -126,18 +128,23 @@ if __name__ == '__main__':
                 subprocess.call(["chmod", "600", args.private_key_dir + "/id_rsa"])
                 subprocess.call(["chown", "root:root", args.private_key_dir + "/id_rsa"])
 
+        if args.tag:
+            # Tag management
+            commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf8").replace("\n", "")
+            tag_messagge = subprocess.check_output(["git", "log", "--format=%B", "-n", "1", commit_hash]).decode("utf8").replace("\n", "")
+            if subprocess.call(["git", "tag", "-a", format_version(orig_version_dict, revisionSep="r"), "-m", tag_messagge]) != 0 \
+                or subprocess.call(["git", "push", "--tags"]) != 0:
+                    raise RuntimeError("Failed to tag this version")
+
+        if args.commit:
             # Git user and email management
             if args.user_email \
                 and (subprocess.call(["git", "config", "user.name", args.user_email[0]]) != 0 \
                 or subprocess.call(["git", "config", "user.email", args.user_email[1]]) != 0):
                     raise RuntimeError("Failed to set git config")
 
-            # Commit and tag management
-            commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf8").replace("\n", "")
-            tag_messagge = subprocess.check_output(["git", "log", "--format=%B", "-n", "1", commit_hash]).decode("utf8").replace("\n", "")
-            if subprocess.call(["git", "tag", "-a", format_version(orig_version_dict, revisionSep="r"), "-m", tag_messagge]) != 0 \
-                or subprocess.call(["git", "add", args.env_path]) != 0 \
+            # Commit management
+            if subprocess.call(["git", "add", args.env_path]) != 0 \
                 or subprocess.call(["git", "commit", "-m", "[skip ci] Increase version to " + format_version(version_dict, showBuild=False)]) != 0 \
-                or subprocess.call(["git", "push"]) != 0 \
-                or subprocess.call(["git", "push", "--tags"]) != 0:
-                    raise RuntimeError("Failed to commit and tag new version")
+                or subprocess.call(["git", "push"]) != 0:
+                    raise RuntimeError("Failed to commit new version")

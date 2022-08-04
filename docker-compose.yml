@@ -48,6 +48,26 @@ services:
       - PRIVATE_KEY # export PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"
     profiles:
       - donotstart # to avoid start on docker compose up
+  tag-version-test:
+    image: 192.168.0.119:50000/version
+    command: version.py -e test/.env -t --private-key "$PRIVATE_KEY"
+    volumes:
+      - ./:/home/root/workdir/
+    network_mode: *nmode
+    environment:
+      - PRIVATE_KEY # export PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"
+    profiles:
+      - donotstart # to avoid start on docker compose up
+  commitAndTag-version-test:
+    image: 192.168.0.119:50000/version
+    command: version.py -e test/.env --next -w -t -c -u "Manuel Pascual López" "manuel.pascual@sedecal.com" --private-key "$PRIVATE_KEY"
+    volumes:
+      - ./:/home/root/workdir/
+    network_mode: *nmode
+    environment:
+      - PRIVATE_KEY # export PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"
+    profiles:
+      - donotstart # to avoid start on docker compose up
   check:
     image: hadolint/hadolint
     command: hadolint /var/repo/Dockerfile
