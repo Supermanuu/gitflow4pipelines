@@ -4,20 +4,6 @@ This is a container that retrieves the version of a certain application and prov
 
 # Getting Started
 
-Prior to building the application, you should first set the `PRIVATE_KEY` environment variable with:
-
-```
-export PRIVATE_KEY="<private key value>"
-```
-
-For example:
-
-```
-export PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"
-```
-
-This is important because the private key will be used to generate the tags and commits when using the `-c` option.
-
 To build the application you need to run the following command:
 
 ```
@@ -46,6 +32,18 @@ To run all tests you can run the following command:
 
 ```
 docker compose up
+```
+
+Prior to use the `commit-version-test`, `tag-version-test` and `commitAndTag-version-test` services, you should first set the `PRIVATE_KEY` environment variable with:
+
+```
+export PRIVATE_KEY="<private key value>"
+```
+
+For example:
+
+```
+export PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"
 ```
 
 # Important
