@@ -128,14 +128,19 @@ if __name__ == '__main__':
                 f.write(new_content)
                 f.write(''.join(rest_of_the_env))
 
-        if args.commit or args.tag:
-            # Private key management
-            if args.private_key:
+        # Private key management
+        if args.private_key:
                 subprocess.call(["mkdir", "-p", args.private_key_dir])
                 with open(args.private_key_dir + "/id_rsa", 'w') as k:
                     k.write(args.private_key[0] + "\n")
                 subprocess.call(["chmod", "600", args.private_key_dir + "/id_rsa"])
                 subprocess.call(["chown", "root:root", args.private_key_dir + "/id_rsa"])
+
+        # Git user and email management
+        if args.user_email \
+            and (subprocess.call(["git", "config", "user.name", args.user_email[0]]) != 0 \
+            or subprocess.call(["git", "config", "user.email", args.user_email[1]]) != 0):
+                raise RuntimeError("Failed to set git config")
 
         if args.tag:
             # Tag management
@@ -146,12 +151,6 @@ if __name__ == '__main__':
                     raise RuntimeError("Failed to tag this version")
 
         if args.commit:
-            # Git user and email management
-            if args.user_email \
-                and (subprocess.call(["git", "config", "user.name", args.user_email[0]]) != 0 \
-                or subprocess.call(["git", "config", "user.email", args.user_email[1]]) != 0):
-                    raise RuntimeError("Failed to set git config")
-
             # Commit management
             if subprocess.call(["git", "add", args.env_path]) != 0 \
                 or subprocess.call(["git", "commit", "-m", "[skip ci] Increase version to " + format_deb_version(version_dict, showBuild=False)]) != 0 \
