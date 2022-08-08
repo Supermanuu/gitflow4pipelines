@@ -5,39 +5,48 @@ import lastVersion # The code to test
 
 class Test_prettyTag(unittest.TestCase):
     def test_normal(self):
-        self.assertEqual(lastVersion.prettyTag('1.0.0'), '1.0.0')
+        self.assertEqual(lastVersion.debTag('1.0.0'), '1.0.0')
 
     def test_revision(self):
-        self.assertEqual(lastVersion.prettyTag('1r1.0.0'), '1:1.0.0')
+        self.assertEqual(lastVersion.debTag('1.0.0.1'), '1:1.0.0')
+
+    def test_revision2(self):
+        self.assertEqual(lastVersion.debTag('1.0.0.2'), '2:1.0.0')
 
     def test_alpanumeric(self):
-        self.assertEqual(lastVersion.prettyTag('1.0.0-lol1'), '1.0.0-lol1')
+        self.assertEqual(lastVersion.debTag('1.0.0-lol1'), '1.0.0-lol1')
 
     def test_alpanumericAndRevision(self):
-        self.assertEqual(lastVersion.prettyTag('1r1.0.0-lol1'), '1:1.0.0-lol1')
+        self.assertEqual(lastVersion.debTag('1.0.0.1-lol1'), '1:1.0.0-lol1')
+
+    def test_alpanumericAndRevision2(self):
+        self.assertEqual(lastVersion.debTag('1.0.0.2-lol1'), '2:1.0.0-lol1')
 
 
 class Test_organizer(unittest.TestCase):
+    def test_format(self):
+        self.assertRaises(RuntimeError, lastVersion.organizer, 'dfsf')
+
     def test_normal(self):
-        self.assertEqual(lastVersion.organizer('1.0.0'), [ '1', '0', '0', '0', '0' ])
+        self.assertEqual(lastVersion.organizer('1.0.0'), [ 1, 0, 0, 0, 0 ])
 
     def test_revision1(self):
-        self.assertEqual(lastVersion.organizer('1r1.0.0'), [ '1', '0', '0', '1', '0' ])
+        self.assertEqual(lastVersion.organizer('1.0.0.1'), [ 1, 0, 0, 1, 0 ])
 
     def test_revision2(self):
-        self.assertEqual(lastVersion.organizer('2r1.0.0'), [ '1', '0', '0', '2', '0' ])
+        self.assertEqual(lastVersion.organizer('1.0.0.2'), [ 1, 0, 0, 2, 0 ])
 
     def test_build1(self):
-        self.assertEqual(lastVersion.organizer('1.0.0-1'), [ '1', '0', '0', '0', '1' ])
+        self.assertEqual(lastVersion.organizer('1.0.0-1'), [ 1, 0, 0, 0, 1 ])
     
     def test_build2(self):
-        self.assertEqual(lastVersion.organizer('1.0.0-2'), [ '1', '0', '0', '0', '2' ])
+        self.assertEqual(lastVersion.organizer('1.0.0-2'), [ 1, 0, 0, 0, 2 ])
 
     def test_all(self):
-        self.assertEqual(lastVersion.organizer('1r2.3.4-5'), [ '2', '3', '4', '1', '5' ])
+        self.assertEqual(lastVersion.organizer('1.2.3.4-5'), [ 1, 2, 3, 4, 5 ])
 
     def test_allphanumeric(self):
-        self.assertEqual(lastVersion.organizer('1r2.3.4-lol5'), [ '2', '3', '4', '1', '5' ])
+        self.assertEqual(lastVersion.organizer('1.2.3.4-lol5'), [ 1, 2, 3, 4, 5 ])
 
 
 class Test_sortTags(unittest.TestCase):
@@ -68,8 +77,8 @@ class Test_sortTags(unittest.TestCase):
         self.assertEqual(lastVersion.sortTags(tags), sort)
 
     def test_revision(self):
-        tags = ['1.0.2', '1.0.0', '1.0.1', '1.0.4', '1r1.0.0', '1.0.3', '1r1.0.3', '2r1.0.3']
-        sort = ['1.0.0', '1r1.0.0', '1.0.1', '1.0.2', '1.0.3', '1r1.0.3', '2r1.0.3', '1.0.4']
+        tags = ['1.0.2', '1.0.0', '1.0.1', '1.0.4', '1.0.0.1', '1.0.3', '1.0.3.1', '1.0.3.1']
+        sort = ['1.0.0', '1.0.0.1', '1.0.1', '1.0.2', '1.0.3', '1.0.3.1', '1.0.3.1', '1.0.4']
         self.assertEqual(lastVersion.sortTags(tags), sort)
 
     def test_build(self):
@@ -78,18 +87,18 @@ class Test_sortTags(unittest.TestCase):
         self.assertEqual(lastVersion.sortTags(tags), sort)
 
     def test_all(self):
-        tags = ['1.0.3-2', '1.0.0', '1r1.0.0-1', '1.0.1', '1r1.0.4', '1r1.0.1-1', '1.0.3', '1.0.2', '1r1.0.0', '1.0.3-1', '1.0.0-1', '1.0.4']
-        sort = ['1.0.0', '1.0.0-1', '1r1.0.0', '1r1.0.0-1', '1.0.1', '1r1.0.1-1', '1.0.2', '1.0.3', '1.0.3-1', '1.0.3-2', '1.0.4', '1r1.0.4']
+        tags = ['1.0.3-2', '1.0.0', '1.0.0.1-1', '1.0.1', '1.0.4.1', '1.0.1.1-1', '1.0.3', '1.0.2', '1.0.0.1', '1.0.3-1', '1.0.0-1', '1.0.4']
+        sort = ['1.0.0', '1.0.0-1', '1.0.0.1', '1.0.0.1-1', '1.0.1', '1.0.1.1-1', '1.0.2', '1.0.3', '1.0.3-1', '1.0.3-2', '1.0.4', '1.0.4.1']
         self.assertEqual(lastVersion.sortTags(tags), sort)
 
     def test_allpphanumeric(self):
-        tags = ['1.0.3-lol2', '1.0.0', '1r1.0.0-lol1', '1.0.1', '1r1.0.4', '1r1.0.1-lol1', '1.0.3', '1.0.2', '1r1.0.0', '1.0.3-lol1', '1.0.0-lol1', '1.0.4']
-        sort = ['1.0.0', '1.0.0-lol1', '1r1.0.0', '1r1.0.0-lol1', '1.0.1', '1r1.0.1-lol1', '1.0.2', '1.0.3', '1.0.3-lol1', '1.0.3-lol2', '1.0.4', '1r1.0.4']
+        tags = ['1.0.3-lol2', '1.0.0', '1.0.0.1-lol1', '1.0.1', '1.0.4.1', '1.0.1.1-lol1', '1.0.3', '1.0.2', '1.0.0.1', '1.0.3-lol1', '1.0.0-lol1', '1.0.4']
+        sort = ['1.0.0', '1.0.0-lol1', '1.0.0.1', '1.0.0.1-lol1', '1.0.1', '1.0.1.1-lol1', '1.0.2', '1.0.3', '1.0.3-lol1', '1.0.3-lol2', '1.0.4', '1.0.4.1']
         self.assertEqual(lastVersion.sortTags(tags), sort)
 
     def test_allpphanumeric2(self):
-        tags = ['1.0.0-lol100', '1.0.3-lol2', '1.0.0', '1r1.0.0-lol1', '1.0.0-lol12', '1.0.0-lol102', '1.0.1', '1r1.0.4', '1r1.0.1-lol1', '1.0.3', '1.0.2', '1.0.0-lol10', '1r1.0.0', '1.0.3-lol1', '1.0.0-lol1', '1.0.4']
-        sort = ['1.0.0', '1.0.0-lol1', '1.0.0-lol10', '1.0.0-lol12', '1.0.0-lol100', '1.0.0-lol102', '1r1.0.0', '1r1.0.0-lol1', '1.0.1', '1r1.0.1-lol1', '1.0.2', '1.0.3', '1.0.3-lol1', '1.0.3-lol2', '1.0.4', '1r1.0.4']
+        tags = ['1.0.0-lol100', '1.0.3-lol2', '1.0.0', '1.0.0.1-lol1', '1.0.0-lol12', '1.0.0-lol102', '1.0.1', '1.0.4.1', '1.0.1.1-lol1', '1.0.3', '1.0.2', '1.0.0-lol10', '1.0.0.1', '1.0.3-lol1', '1.0.0-lol1', '1.0.4']
+        sort = ['1.0.0', '1.0.0-lol1', '1.0.0-lol10', '1.0.0-lol12', '1.0.0-lol100', '1.0.0-lol102', '1.0.0.1', '1.0.0.1-lol1', '1.0.1', '1.0.1.1-lol1', '1.0.2', '1.0.3', '1.0.3-lol1', '1.0.3-lol2', '1.0.4', '1.0.4.1']
         self.assertEqual(lastVersion.sortTags(tags), sort)
 
 if __name__ == '__main__':
