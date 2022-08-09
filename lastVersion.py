@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import re
+import sys
 import subprocess
 
 tagCheck = re.compile(r"^\d+\.\d+\.\d+(?:\.\d+)?(?:-[\da-zA-Z_]+)?$")
@@ -40,7 +41,9 @@ def debTag(tag):
 def get():
     tags = subprocess.check_output(["git", "tag", "--merged"]).decode("utf8").split("\n")
     tags.remove("")
-    return debTag(sortTags(tags)[-1])
+    sortedTags = sortTags(tags)
+    print(f"Sorted tags: {sortedTags}", file=sys.stderr)
+    return debTag(sortedTags[-1])
 
 if __name__ == '__main__':
     print(get())
