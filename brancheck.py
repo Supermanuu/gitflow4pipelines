@@ -3,14 +3,33 @@
 import sys
 import argparse
 
-development = 'refs/heads/development'
-integration = 'refs/heads/integration'
-main = 'refs/heads/main'
+main = 'main'
+master = 'master'
+release = 'release/'
+integration = 'integration'
 
-feature = 'refs/heads/feature/'
-bug = 'refs/heads/bug/'
-fix = 'refs/heads/fix/'
-hotfix = 'refs/heads/hotfix/'
+bug = 'bug/'
+fix = 'fix/'
+bugfix = 'bugfix/'
+hotfix = 'hotfix/'
+feature = 'feature/'
+
+def brancheck(rawSource : str, rawTarget : str):
+    source = rawSource.replace('refs/heads/', '')
+    target = rawTarget.replace('refs/heads/', '')
+
+    good=False
+    if release in target:
+        good = source.startswith(feature) or source.startswith(bug) or source.startswith(bugfix)
+    elif target == integration:
+        good = source.startswith(fix) or source.startswith(release)
+    elif target == main or target == master:
+        good = source.startswith(hotfix) or source == integration
+    else:
+        raise RuntimeError("Bad target branch")
+    if not good:
+        raise RuntimeError(f"Cannot merge from '{source}' to '{target}'")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Checks SEDECAL\'s git flow.')
@@ -26,14 +45,4 @@ if __name__ == '__main__':
 
     print(f"Checking PR from '{args.source}' to '{args.target}'")
 
-    good=False
-    if args.target == development:
-        good = args.source.startswith(feature) or args.source.startswith(bug)
-    elif args.target == integration:
-        good = args.source.startswith(fix) or args.source == development
-    elif args.target == main:
-        good = args.source.startswith(hotfix) or args.source == integration
-    else:
-        raise RuntimeError("Bad target branch", file=sys.stderr)
-    if not good:
-        raise RuntimeError(f"Cannot merge from '{args.source}' to '{args.target}'", file=sys.stderr)
+    brancheck(args.source, args.target)

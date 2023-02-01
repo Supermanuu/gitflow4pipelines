@@ -2,157 +2,106 @@
 
 import os
 import re
-import sys
-import argparse
 import subprocess
 
-versions = re.compile(r'^PROJECT_VERSION_([^=]+)=([a-zA-Z0-9]+)(?: ?#.*)?$')
 
-# Version format definition as known by the DEB package documentation
-def format_deb_version(vd, showBuild=True):
-    ret = vd['MAJOR'] + "." + vd['MINOR'] + "." + vd['PATCH']
-    if int(vd['REVISION']) > 0:
-        ret = vd['REVISION'] + ":" + ret
-    if vd['BUILD'] != "0" and showBuild:
-        ret = ret + "-" + vd['BUILD']
-    return ret
+debug = os.getenv('DEBUG')
+user_id = os.getenv('USER_ID') # Name for non CI versions
+build_id = os.getenv('BUILD_ID') # Local or CI version
+apt_version = os.getenv('APT_VERSION') # APT version formatting
 
-# Version format definition as known by SEDECAL
-def format_SEDECAL_version(vd):
-    ret = vd['MAJOR'] + "." + vd['MINOR'] + "." + vd['PATCH']
-    if int(vd['REVISION']) > 0:
-        ret = ret + "." + vd['REVISION']
-    if vd['BUILD'] != "0":
-        ret = ret + "-" + vd['BUILD']
-    return ret
+# Version format:
+#   \d+ . \d+ . \d+ [ . \d+ ] [ \+   \w+   ]
+#   major minor patch revision  special name
+# 
+# Release format:
+#  release/ \d+ . \d+ . \d+ [ . \d+ ] [ \+   \w+   ]
+#           major minor patch revision  special name
+versionPattern = re.compile(r'^(\d+\.\d+\.\d+)(\.\d+)?(\+\w+)?$')
+releasePattern = re.compile(r'^release/((?:\d+\.\d+\.\d+)(?:\.\d+)?(?:\+\w+)?)$')
+
+
+def debugm(message : str):
+    '''Print this message on debug run'''
+    if debug: print(message)
+
+
+def aptVersioning(version : str):
+    '''Converts this version to Debian versioning format'''
+    found = versionPattern.match(version)
+    if found == None:
+        raise RuntimeError('Bad formatted version: \'' + version + '\'. It must follow ' + versionPattern.pattern)
+    else:
+        revision = found.group(2).replace('.', '') + ":" if found.group(2) != None else ''
+        additional = found.group(3) if found.group(3) != None else ''
+        return revision + found.group(1) + additional
+
+
+def getVersionFromBranchName(branch : str):
+    '''Version from branch name'''
+    debugm('Checking \'' + branch + '\'')
+    found = releasePattern.match(branch)
+    if found == None:
+        raise ReleaseIsNotNormalized('This branch does not follow the naming convention ' + releasePattern.pattern)
+    else:
+        return found.group(1)
+
+
+def getFirstNormalizedBranch():
+    '''Branch name from this git branch, iterate until first good named branch'''
+    # Get all references from this commit
+    refs = subprocess.check_output('git rev-list HEAD'.split(' ')).decode('UTF-8').split('\n')
+    refs.remove('')
+    if len(refs) == 0:
+        raise RuntimeError('No refs found')
+    else:
+        for ref in refs:
+            debugm('Checking ' + ref)
+            # Get all branches that contains this reference
+            branchesCommand = 'git branch --contains ' + ref
+            branches = subprocess.check_output(branchesCommand.split(' ')).decode('UTF-8').split('\n')
+            branches.remove('')
+            branches.reverse()
+            debugm(branches)
+            if len(branches) == 0:
+                print('No related branches for \'' + branchesCommand + '\'')
+            else:
+                for branch in branches:
+                    # Check each branch in order
+                    try:
+                        version = getVersionFromBranchName(branch.replace('  ', '').replace('* ', ''))
+                    finally:
+                        if version != None:
+                            return version
+
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Manages the version change in a .env file.')
-    parser.add_argument('-e', '--env-path', type=str, default='./.env',
-                        action="store", help='.env file path')
-    parser.add_argument('-p', metavar='package', type=str,
-                        help='Package name definition')
-    parser.add_argument('-a', metavar='architecture', type=str,
-                        help='Architecture definition')
-    parser.add_argument('--last', action="store_true",
-                        help='Shows last tagged version instead of .env data. Only affects to prompt, this not changes .env file')
-    advance = parser.add_argument_group("Version increase options")
-    advance.add_argument('--next', action="store_true",
-                        help='Increase minor version')
-    advance.add_argument('--next-revision', action="store_true",
-                        help='Increase revision version')
-    parser.add_argument('-w', '--write', action="store_true",
-                        help='Writes the change in the .env file')
-    git = parser.add_argument_group("Git management options")
-    git.add_argument('-c', '--commit', action="store_true",
-                        help='Commits changes into git repository')
-    git.add_argument('-t', '--tag', action="store_true",
-                        help='Tag this version into git repository')
-    git.add_argument('-u', '--user-email', action="store", nargs=2, metavar=("USER", "EMAIL"),
-                        help='Git user and email configuration')
-    git.add_argument('--private-key', action="store", nargs=1,
-                        help='SSH private key')
-    git.add_argument('--private-key-dir', action="store", nargs=1, type=str, default='/root/.ssh',
-                        help='SSH private key')
-    showg = parser.add_argument_group("Output one value")
-    show = showg.add_mutually_exclusive_group()
-    show.add_argument('--minor', action="store_true",
-                        help='Shows minor version')
-    show.add_argument('--major', action="store_true",
-                        help='Shows major version')
-    show.add_argument('--patch', action="store_true",
-                        help='Shows patch version')
-    show.add_argument('--revision', action="store_true",
-                        help='Shows revision version')
-    show.add_argument('--build', action="store_true",
-                        help='Shows build version')
-    args = parser.parse_args(sys.argv[1:])
+    # Branch name from this git branch, else iterate until first good named branch
+    thisBranch = subprocess.check_output('git rev-parse --abbrev-ref HEAD'.split(' ')).decode('UTF-8').split('\n')
+    thisBranch.remove('')
+    if len(thisBranch) > 0:
+        version = getVersionFromBranchName(thisBranch[0])
+    if version == None:
+        version = getFirstNormalizedBranch()
 
-    # Env file reading
-    with open(args.env_path) as f:
-        lines = f.readlines()
+    if version == None:
+        raise RuntimeError('No version could be parsed')
 
-    # Fields extraction
-    version_dict={}
-    rest_of_the_env=[]
-    for line in lines:
-        found = versions.findall(line)
-        if len(found) > 0:
-            version_dict[found[0][0]]=found[0][1]
+    if apt_version != None:
+        version = aptVersioning(version)
+    if build_id != None:
+        if '+' in version:
+            # Build id just before -
+            splittedVersion = version.split('+')
+            version = splittedVersion[0] + '-' + build_id + '+' + splittedVersion[1]
         else:
-            rest_of_the_env.append(line)
+            version += '-' + build_id
+    if user_id != None:
+        version += '+' + user_id
 
-    # Build ID environment value
-    buildId = os.getenv('PROJECT_VERSION_BUILD')
-    if buildId is not None:
-        version_dict['BUILD'] = buildId
+    print(version)
 
-    # Fields checking
-    if not all(k in version_dict for k in ('MAJOR', 'MINOR', 'PATCH', 'REVISION', 'BUILD')):
-        raise RuntimeError("Bad env file", file=sys.stderr)
-    orig_version_dict = version_dict.copy()
 
-    # Increase options
-    if args.next_revision:
-        version_dict['REVISION'] = str(int(version_dict['REVISION']) + 1)
-    if args.next:
-        version_dict['PATCH'] = str(int(version_dict['PATCH']) + 1)
-        version_dict['REVISION'] = '0'
-
-    # Version prompt
-    if args.major:      print(version_dict['MAJOR'])
-    elif args.minor:    print(version_dict['MINOR'])
-    elif args.patch:    print(version_dict['PATCH'])
-    elif args.revision: print(version_dict['REVISION'])
-    elif args.build:    print(version_dict['BUILD'])
-    else:
-        if args.last:
-            import lastVersion
-            version_str = [args.p, lastVersion.get(), args.a]
-        else:
-            version_str = [args.p, format_deb_version(version_dict), args.a]
-        print('_'.join(filter(None, version_str)))
-
-    if not args.last:
-        if args.write:
-            # Content generation
-            new_content=""
-            for c,v in version_dict.items():
-                if c != 'BUILD':
-                    new_content+='PROJECT_VERSION_' + c + '=' + v + '\n'
-                else:
-                    new_content+='PROJECT_VERSION_BUILD=0 # Filled out by CI\n'
-
-            # File writing
-            with open(args.env_path, 'w') as f:
-                f.write(new_content)
-                f.write(''.join(rest_of_the_env))
-
-        # Private key management
-        if args.private_key:
-                subprocess.call(["mkdir", "-p", args.private_key_dir])
-                with open(args.private_key_dir + "/id_rsa", 'w') as k:
-                    k.write(args.private_key[0] + "\n")
-                subprocess.call(["chmod", "600", args.private_key_dir + "/id_rsa"])
-                subprocess.call(["chown", "root:root", args.private_key_dir + "/id_rsa"])
-
-        # Git user and email management
-        if args.user_email \
-            and (subprocess.call(["git", "config", "user.name", args.user_email[0]]) != 0 \
-            or subprocess.call(["git", "config", "user.email", args.user_email[1]]) != 0):
-                raise RuntimeError("Failed to set git config")
-
-        if args.tag:
-            # Tag management
-            commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf8").replace("\n", "")
-            tag_messagge = subprocess.check_output(["git", "log", "--format=%B", "-n", "1", commit_hash]).decode("utf8").replace("\n", "")
-            if subprocess.call(["git", "tag", "-a", format_SEDECAL_version(orig_version_dict), "-m", tag_messagge]) != 0 \
-                or subprocess.call(["git", "push", "--tags"]) != 0:
-                    raise RuntimeError("Failed to tag this version")
-
-        if args.commit:
-            # Commit management
-            if subprocess.call(["git", "add", args.env_path]) != 0 \
-                or subprocess.call(["git", "commit", "-m", "[skip ci] Increase version to " + format_deb_version(version_dict, showBuild=False)]) != 0 \
-                or subprocess.call(["git", "push"]) != 0:
-                    raise RuntimeError("Failed to commit new version")
+class ReleaseIsNotNormalized(RuntimeError):
+    '''Raised when the release branch dont follow the specified pattern'''
+    pass

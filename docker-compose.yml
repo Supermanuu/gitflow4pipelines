@@ -2,93 +2,24 @@
 version: "3.3"
 services:
   image:
-    image: 192.168.0.119:50000/version
+    image: &image 192.168.0.119:50000/version:azure
     build: .
     network_mode: &nmode "host"
-  version-test:
-    image: 192.168.0.119:50000/version
-    command: version.py
-    volumes: &test_volume
-      - ./test/:/home/root/workdir/
-    network_mode: *nmode
-  package-test:
-    image: 192.168.0.119:50000/version
-    command: version.py -p test -a amd64
-    volumes: *test_volume
-    network_mode: *nmode
-  next-version-test:
-    image: 192.168.0.119:50000/version
-    command: version.py --next
-    volumes: *test_volume
-    network_mode: *nmode
-  next-revision-version-test:
-    image: 192.168.0.119:50000/version
-    command: version.py --next-revision -a lol
-    volumes: *test_volume
-    network_mode: *nmode
-  change-version-test:
-    image: 192.168.0.119:50000/version
-    command: version.py --next -w
-    volumes: *test_volume
-    network_mode: *nmode
-  change-revision-test:
-    image: 192.168.0.119:50000/version
-    command: version.py --next-revision -w
-    volumes: *test_volume
-    network_mode: *nmode
-  buildid-version-test:
-    image: 192.168.0.119:50000/version
-    command: version.py --next -w
-    volumes: *test_volume
-    network_mode: *nmode
-    environment:
-      - PROJECT_VERSION_BUILD=10
-  commit-version-test:
-    image: 192.168.0.119:50000/version
-    command: version.py -e test/.env --next -w -c -u "Manuel Pascual López" "manuel.pascual@sedecal.com" --private-key "$PRIVATE_KEY"
-    volumes:
-      - ./:/home/root/workdir/
-    network_mode: *nmode
-    environment:
-      - PRIVATE_KEY # export PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"
-    profiles:
-      - donotstart # to avoid start on docker compose up
-  tag-version-test:
-    image: 192.168.0.119:50000/version
-    command: version.py -e test/.env -t --private-key "$PRIVATE_KEY"
-    volumes:
-      - ./:/home/root/workdir/
-    network_mode: *nmode
-    environment:
-      - PRIVATE_KEY # export PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"
-    profiles:
-      - donotstart # to avoid start on docker compose up
-  commitAndTag-version-test:
-    image: 192.168.0.119:50000/version
-    command: version.py -e test/.env --next -w -t -c -u "Manuel Pascual López" "manuel.pascual@sedecal.com" --private-key "$PRIVATE_KEY"
-    volumes:
-      - ./:/home/root/workdir/
-    network_mode: *nmode
-    environment:
-      - PRIVATE_KEY # export PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"
-    profiles:
-      - donotstart # to avoid start on docker compose up
   check:
     image: hadolint/hadolint
     command: hadolint /var/repo/Dockerfile
     volumes:
       - ./:/var/repo
     network_mode: *nmode
-  brancheck-test:
-    image: 192.168.0.119:50000/version
-    command: brancheck.py refs/heads/feature/lol refs/heads/development
-    volumes: *test_volume
-    network_mode: *nmode
-  unit-tests: # run unit tests
+  test: # run unit tests
     image: python
     command: | 
       /bin/bash -c "
-      python3 -m test.lastVersion_test
+        set -e
+        echo 'Brancheck tests:'
+        python3 -m test.brancheck_test
+        echo 'Version tests:'
+        python3 -m test.version_test
       "
     volumes:
       - ./:/home/root/workdir/
