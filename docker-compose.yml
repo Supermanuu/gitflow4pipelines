@@ -5,7 +5,7 @@ services:
     image: &image 192.168.0.119:50000/version:azure
     build: .
     network_mode: &nmode "host"
-  check:
+  lint-docker:
     image: hadolint/hadolint
     command: hadolint /var/repo/Dockerfile
     volumes:
