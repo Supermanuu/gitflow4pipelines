@@ -2,49 +2,49 @@
 version: "3.3"
 services:
   image:
-    image: 192.168.0.119:50000/version
+    image: &image 192.168.0.119:50000/version:bitbucket
     build: .
     network_mode: &nmode "host"
   version-test:
-    image: 192.168.0.119:50000/version
+    image: *image
     command: version.py
     volumes: &test_volume
       - ./test/:/home/root/workdir/
     network_mode: *nmode
   package-test:
-    image: 192.168.0.119:50000/version
+    image: *image
     command: version.py -p test -a amd64
     volumes: *test_volume
     network_mode: *nmode
   next-version-test:
-    image: 192.168.0.119:50000/version
+    image: *image
     command: version.py --next
     volumes: *test_volume
     network_mode: *nmode
   next-revision-version-test:
-    image: 192.168.0.119:50000/version
+    image: *image
     command: version.py --next-revision -a lol
     volumes: *test_volume
     network_mode: *nmode
   change-version-test:
-    image: 192.168.0.119:50000/version
+    image: *image
     command: version.py --next -w
     volumes: *test_volume
     network_mode: *nmode
   change-revision-test:
-    image: 192.168.0.119:50000/version
+    image: *image
     command: version.py --next-revision -w
     volumes: *test_volume
     network_mode: *nmode
   buildid-version-test:
-    image: 192.168.0.119:50000/version
+    image: *image
     command: version.py --next -w
     volumes: *test_volume
     network_mode: *nmode
     environment:
       - PROJECT_VERSION_BUILD=10
   commit-version-test:
-    image: 192.168.0.119:50000/version
+    image: *image
     command: version.py -e test/.env --next -w -c -u "Manuel Pascual López" "manuel.pascual@sedecal.com" --private-key "$PRIVATE_KEY"
     volumes:
       - ./:/home/root/workdir/
@@ -54,7 +54,7 @@ services:
     profiles:
       - donotstart # to avoid start on docker compose up
   tag-version-test:
-    image: 192.168.0.119:50000/version
+    image: *image
     command: version.py -e test/.env -t --private-key "$PRIVATE_KEY"
     volumes:
       - ./:/home/root/workdir/
@@ -64,7 +64,7 @@ services:
     profiles:
       - donotstart # to avoid start on docker compose up
   commitAndTag-version-test:
-    image: 192.168.0.119:50000/version
+    image: *image
     command: version.py -e test/.env --next -w -t -c -u "Manuel Pascual López" "manuel.pascual@sedecal.com" --private-key "$PRIVATE_KEY"
     volumes:
       - ./:/home/root/workdir/
@@ -80,7 +80,7 @@ services:
       - ./:/var/repo
     network_mode: *nmode
   brancheck-test:
-    image: 192.168.0.119:50000/version
+    image: *image
     command: brancheck.py refs/heads/feature/lol refs/heads/development
     volumes: *test_volume
     network_mode: *nmode
