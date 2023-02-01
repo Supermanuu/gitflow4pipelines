@@ -4,7 +4,7 @@ import unittest # The test framework
 import brancheck # The code to test
 
 
-class Test_getVersionFromBranchName(unittest.TestCase):
+class Test_getVersionFromCurrentBranch(unittest.TestCase):
     def test_format00(self):
         self.assertRaises(RuntimeError, brancheck.brancheck, 'dfsf', 'main')
 

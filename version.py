@@ -21,6 +21,11 @@ versionPattern = re.compile(r'^(\d+\.\d+\.\d+)(\.\d+)?(\+\w+)?$')
 releasePattern = re.compile(r'^release/((?:\d+\.\d+\.\d+)(?:\.\d+)?(?:\+\w+)?)$')
 
 
+class ReleaseIsNotNormalized(RuntimeError):
+    '''Raised when the release branch dont follow the specified pattern'''
+    pass
+
+
 def debugm(message : str):
     '''Print this message on debug run'''
     if debug: print(message)
@@ -37,7 +42,7 @@ def aptVersioning(version : str):
         return revision + found.group(1) + additional
 
 
-def getVersionFromBranchName(branch : str):
+def getVersionFromCurrentBranch(branch : str):
     '''Version from branch name'''
     debugm('Checking \'' + branch + '\'')
     found = releasePattern.match(branch)
@@ -47,7 +52,7 @@ def getVersionFromBranchName(branch : str):
         return found.group(1)
 
 
-def getFirstNormalizedBranch():
+def getFirstNormalizedVersion():
     '''Branch name from this git branch, iterate until first good named branch'''
     # Get all references from this commit
     refs = subprocess.check_output('git rev-list HEAD'.split(' ')).decode('UTF-8').split('\n')
@@ -69,10 +74,9 @@ def getFirstNormalizedBranch():
                 for branch in branches:
                     # Check each branch in order
                     try:
-                        version = getVersionFromBranchName(branch.replace('  ', '').replace('* ', ''))
-                    finally:
-                        if version != None:
-                            return version
+                        return getVersionFromCurrentBranch(branch.replace('  ', '').replace('* ', ''))
+                    except ReleaseIsNotNormalized:
+                        pass
 
 
 if __name__ == '__main__':
@@ -80,9 +84,10 @@ if __name__ == '__main__':
     thisBranch = subprocess.check_output('git rev-parse --abbrev-ref HEAD'.split(' ')).decode('UTF-8').split('\n')
     thisBranch.remove('')
     if len(thisBranch) > 0:
-        version = getVersionFromBranchName(thisBranch[0])
-    if version == None:
-        version = getFirstNormalizedBranch()
+        try:
+            version = getVersionFromCurrentBranch(thisBranch[0])
+        except ReleaseIsNotNormalized: 
+            version = getFirstNormalizedVersion()
 
     if version == None:
         raise RuntimeError('No version could be parsed')
@@ -100,8 +105,3 @@ if __name__ == '__main__':
         version += '+' + user_id
 
     print(version)
-
-
-class ReleaseIsNotNormalized(RuntimeError):
-    '''Raised when the release branch dont follow the specified pattern'''
-    pass
