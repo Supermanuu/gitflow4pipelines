@@ -82,6 +82,11 @@ class Test_getVersion(unittest.TestCase):
         self.assertEqual(version.getFirstNormalizedVersion(), '1.0.1+flashback')
 
 
+class Test_getProjectName(unittest.TestCase):
+    def test_get(self):
+        self.assertEqual(version.getProjectName(), 'versionContainer')
+
+
 class Test_getVersionFromCurrentBranch(unittest.TestCase):
     def test_format00(self):
         self.assertRaises(version.ReleaseIsNotNormalized, version.getVersionFromCurrentBranch, 'dfsf')
@@ -165,67 +170,67 @@ class Test_getVersionFromCurrentBranch(unittest.TestCase):
         self.assertEqual(version.getVersionFromCurrentBranch('release/1.2.3.4+RS232'), '1.2.3.4+RS232')
 
 
-class Test_aptVersioning(unittest.TestCase):
+class Test_debVersioning(unittest.TestCase):
     def test_void(self):
-        self.assertRaises(RuntimeError, version.aptVersioning, '')
+        self.assertRaises(RuntimeError, version.debVersioning, '')
 
     def test_bad1(self):
-        self.assertRaises(RuntimeError, version.aptVersioning, '1')
+        self.assertRaises(RuntimeError, version.debVersioning, '1')
 
     def test_bad2(self):
-        self.assertRaises(RuntimeError, version.aptVersioning, '1.')
+        self.assertRaises(RuntimeError, version.debVersioning, '1.')
 
     def test_bad3(self):
-        self.assertRaises(RuntimeError, version.aptVersioning, '1.2')
+        self.assertRaises(RuntimeError, version.debVersioning, '1.2')
 
     def test_bad4(self):
-        self.assertRaises(RuntimeError, version.aptVersioning, '1.2.')
+        self.assertRaises(RuntimeError, version.debVersioning, '1.2.')
 
     def test_bad5(self):
-        self.assertRaises(RuntimeError, version.aptVersioning, '1.2.3+')
+        self.assertRaises(RuntimeError, version.debVersioning, '1.2.3+')
 
     def test_bad6(self):
-        self.assertRaises(RuntimeError, version.aptVersioning, '1.2.3-')
+        self.assertRaises(RuntimeError, version.debVersioning, '1.2.3-')
 
     def test_bad7(self):
-        self.assertRaises(RuntimeError, version.aptVersioning, '1.2.3-bad')
+        self.assertRaises(RuntimeError, version.debVersioning, '1.2.3-bad')
 
     def test_normal1(self):
-        self.assertEqual(version.aptVersioning('1.0.0'), '1.0.0')
+        self.assertEqual(version.debVersioning('1.0.0'), '1.0.0')
 
     def test_normal2(self):
-        self.assertEqual(version.aptVersioning('1.2.0'), '1.2.0')
+        self.assertEqual(version.debVersioning('1.2.0'), '1.2.0')
 
     def test_normal3(self):
-        self.assertEqual(version.aptVersioning('1.0.3'), '1.0.3')
+        self.assertEqual(version.debVersioning('1.0.3'), '1.0.3')
 
     def test_revision1(self):
-        self.assertEqual(version.aptVersioning('1.0.0.4'), '4:1.0.0')
+        self.assertEqual(version.debVersioning('1.0.0.4'), '4:1.0.0')
 
     def test_revision2(self):
-        self.assertEqual(version.aptVersioning('1.2.0.4'), '4:1.2.0')
+        self.assertEqual(version.debVersioning('1.2.0.4'), '4:1.2.0')
 
     def test_revision3(self):
-        self.assertEqual(version.aptVersioning('1.0.3.4'), '4:1.0.3')
+        self.assertEqual(version.debVersioning('1.0.3.4'), '4:1.0.3')
 
     # With +
     def test_normal1lolaso(self):
-        self.assertEqual(version.aptVersioning('1.0.0+lolaso'), '1.0.0+lolaso')
+        self.assertEqual(version.debVersioning('1.0.0+lolaso'), '1.0.0+lolaso')
 
     def test_normal2lolaso(self):
-        self.assertEqual(version.aptVersioning('1.2.0+lolaso1'), '1.2.0+lolaso1')
+        self.assertEqual(version.debVersioning('1.2.0+lolaso1'), '1.2.0+lolaso1')
 
     def test_normal3lolaso(self):
-        self.assertEqual(version.aptVersioning('1.0.3+lolaso'), '1.0.3+lolaso')
+        self.assertEqual(version.debVersioning('1.0.3+lolaso'), '1.0.3+lolaso')
 
     def test_revision1lolaso(self):
-        self.assertEqual(version.aptVersioning('1.0.0.4+lolaso1'), '4:1.0.0+lolaso1')
+        self.assertEqual(version.debVersioning('1.0.0.4+lolaso1'), '4:1.0.0+lolaso1')
 
     def test_revision2lolaso(self):
-        self.assertEqual(version.aptVersioning('1.2.0.4+lolaso'), '4:1.2.0+lolaso')
+        self.assertEqual(version.debVersioning('1.2.0.4+lolaso'), '4:1.2.0+lolaso')
 
     def test_revision3lolaso(self):
-        self.assertEqual(version.aptVersioning('1.0.3.4+lolaso1'), '4:1.0.3+lolaso1')
+        self.assertEqual(version.debVersioning('1.0.3.4+lolaso1'), '4:1.0.3+lolaso1')
 
 
 if __name__ == '__main__':

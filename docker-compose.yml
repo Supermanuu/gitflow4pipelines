@@ -20,6 +20,7 @@ services:
         python3 -m test.brancheck_test
         echo 'Version tests:'
         python3 -m test.version_test
+        echo 'All test went ok'
       "
     volumes:
       - ./:/home/root/workdir/

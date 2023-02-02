@@ -8,7 +8,9 @@ import subprocess
 debug = os.getenv('DEBUG')
 user_id = os.getenv('USER_ID') # Name for non CI versions
 build_id = os.getenv('BUILD_ID') # Local or CI version
-apt_version = os.getenv('APT_VERSION') # APT version formatting
+deb_version = os.getenv('DEB_VERSION') # DEB version formatting
+project_name = os.getenv('DEB_PROJECT') # Project name
+architecture = os.getenv('DEB_ARCHITECTURE') # Binary architecture
 
 # Version format:
 #   \d+ . \d+ . \d+ [ . \d+ ] [ \+   \w+   ]
@@ -30,8 +32,21 @@ def debugm(message : str):
     '''Print this message on debug run'''
     if debug: print(message)
 
+def getProjectName():
+    projectNamePattern = re.compile(r'^.*/([^/]+)$')
+    projectNameOutput = subprocess.check_output('git remote get-url origin'.split(' ')).decode('UTF-8').split('\n')
+    projectNameOutput.remove('')
+    if len(projectNameOutput) == 1:
+        found = projectNamePattern.match(projectNameOutput[0])
+        if found == None:
+            raise RuntimeError('Cannot determine repo name from ' + projectNameOutput[0])
+        else:
+            return found.group(1)
+    else:
+        raise RuntimeError('Cannot determine git remote URL')
 
-def aptVersioning(version : str):
+
+def debVersioning(version : str):
     '''Converts this version to Debian versioning format'''
     found = versionPattern.match(version)
     if found == None:
@@ -92,8 +107,8 @@ if __name__ == '__main__':
     if version == None:
         raise RuntimeError('No version could be parsed')
 
-    if apt_version != None:
-        version = aptVersioning(version)
+    if deb_version != None:
+        version = debVersioning(version)
     if build_id != None:
         if '+' in version:
             # Build id just before -
@@ -103,5 +118,9 @@ if __name__ == '__main__':
             version += '-' + build_id
     if user_id != None:
         version += '+' + user_id
+    if architecture != None:
+        version += '_' + architecture
+    if project_name != None:
+        version = getProjectName() + '_' + version
 
     print(version)

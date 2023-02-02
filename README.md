@@ -19,16 +19,3 @@ To test the application you can run the following command:
 ```
 docker compose run -it --rm test
 ```
-
-TODO:
-Prior to use the test services, you should first set the `PRIVATE_KEY` environment variable with:
-
-```
-export PRIVATE_KEY="<private key value>"
-```
-
-For example:
-
-```
-export PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"
-```
