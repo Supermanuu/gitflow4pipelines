@@ -12,7 +12,7 @@ user_id = os.getenv('USER_ID') # Name for non CI versions
 build_id = os.getenv('BUILD_ID') # Local or CI version
 deb_version = os.getenv('DEB_VERSION') # DEB version formatting
 project_name = os.getenv('DEB_PROJECT') # Project name
-architecture = os.getenv('DEB_ARCHITECTURE') # Binary architecture
+architecture = os.getenv('PACKAGE_ARCHITECTURE') # Binary architecture
 
 # Version format:
 #   \d+ . \d+ . \d+ [ . \d+ ] [ \+   \w+   ]
