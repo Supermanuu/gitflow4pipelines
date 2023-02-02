@@ -4,7 +4,7 @@ import os
 import re
 import subprocess
 
-import projectName
+import project
 
 
 debug = os.getenv('DEBUG')
@@ -83,7 +83,7 @@ def getFirstNormalizedVersion():
                         pass
 
 
-if __name__ == '__main__':
+def getVersion() -> str:
     # Branch name from this git branch, else iterate until first good named branch
     thisBranch = subprocess.check_output('git rev-parse --abbrev-ref HEAD'.split(' ')).decode('UTF-8').split('\n')
     thisBranch.remove('')
@@ -110,6 +110,9 @@ if __name__ == '__main__':
     if architecture != None:
         version += '_' + architecture
     if project_name != None:
-        version = projectName.getProjectName() + '_' + version
+        version = project.getName() + '_' + version
+    return version
 
-    print(version)
+
+if __name__ == '__main__':
+    print(getVersion())

@@ -21,10 +21,11 @@ services:
         echo 'Version tests:'
         python3 -m test.version_test
         echo 'Project name tests:'
-        python3 -m test.projectName_test
+        python3 -m test.project_test
         echo 'All test went ok'
       "
     volumes:
       - ./:/home/root/workdir/
     network_mode: *nmode
     working_dir: /home/root/workdir/
+    user: "${EXTERNAL_UID:-1000}:${EXTERNAL_GID:-1000}"

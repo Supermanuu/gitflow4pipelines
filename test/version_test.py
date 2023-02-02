@@ -12,7 +12,9 @@ class Test_getVersion(unittest.TestCase):
         if subprocess.call('rm -rf testRepo'.split(' ')) != 0:
             raise RuntimeError('Cannot remove test repo')
         if subprocess.call('mkdir testRepo'.split(' ')) != 0 \
-            or subprocess.call('git -C testRepo init'.split(' ')) != 0:
+            or subprocess.call('git -C testRepo init -b main'.split(' ')) != 0 \
+            or subprocess.call('git -C testRepo config user.email you@example.com'.split(' ')) != 0 \
+            or subprocess.call('git -C testRepo config user.name Name'.split(' ')) != 0:
             raise RuntimeError('Cannot create test repo')
         os.chdir('testRepo')
 
