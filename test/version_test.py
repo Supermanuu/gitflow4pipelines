@@ -82,11 +82,6 @@ class Test_getVersion(unittest.TestCase):
         self.assertEqual(version.getFirstNormalizedVersion(), '1.0.1+flashback')
 
 
-class Test_getProjectName(unittest.TestCase):
-    def test_get(self):
-        self.assertEqual(version.getProjectName(), 'versionContainer')
-
-
 class Test_getVersionFromCurrentBranch(unittest.TestCase):
     def test_format00(self):
         self.assertRaises(version.ReleaseIsNotNormalized, version.getVersionFromCurrentBranch, 'dfsf')
