@@ -20,7 +20,7 @@ def brancheck(rawSource : str, rawTarget : str):
 
     good=False
     if release in target:
-        good = source.startswith(feature) or source.startswith(bug) or source.startswith(bugfix)
+        good = source.startswith(release) or source.startswith(feature) or source.startswith(bug) or source.startswith(bugfix)
     elif target == integration:
         good = source.startswith(fix) or source.startswith(release)
     elif target == main or target == master:
