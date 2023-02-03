@@ -107,10 +107,11 @@ def getVersion() -> str:
             version += '-' + build_id
     if user_id != None:
         version += '+' + user_id
-    if architecture != None:
-        version += '_' + architecture
-    if project_name != None:
-        version = project.getName() + '_' + version
+    if deb_version != None:
+        if architecture != None:
+            version += '_' + architecture
+        if project_name != None:
+            version = project.getName() + '_' + version
     return version
 
 
