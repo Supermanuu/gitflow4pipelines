@@ -32,7 +32,7 @@ Depends: ' + defaultIfNone(package_depends) + '\n\
 Conflicts: ' + defaultIfNone(package_conflicts) + '\n\
 Replaces: ' + defaultIfNone(package_replaces) + '\n\
 Homepage: ' + project.getURL() + '\n\
-Description: ' + defaultIfNone(package_description)
+Description: ' + defaultIfNone(package_description) + '\n'
 
 
 if __name__ == '__main__':
