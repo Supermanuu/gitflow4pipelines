@@ -166,8 +166,8 @@ if __name__ == '__main__':
     elif args.patch: 
         print(version['patch'])
     elif args.build: 
-        print(build_id)
+        print(build_id if build_id != None else 0)
     elif args.revision: 
-        print(version['revision'])
+        print(version['revision'] if version['revision'] != '' else 0)
     else:
         print(format_version(version, deb_version != None, build_id, user_id, architecture, project_name != None))
