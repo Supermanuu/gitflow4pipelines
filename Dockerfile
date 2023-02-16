@@ -4,7 +4,7 @@ FROM ubuntu:focal
 RUN apt-get update -y \
         && apt-get install -y --no-install-recommends \
                 python3=3.8.2-0ubuntu2 \
-                git=1:2.25.1-1ubuntu3.8 \
+                git=1:2.25.1-1ubuntu3.10 \
                 ssh=1:8.2p1-4ubuntu0.5 \
         && apt-get clean \
         && rm -rf /var/lib/apt/lists/*
