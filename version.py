@@ -22,7 +22,7 @@ architecture = os.getenv('PACKAGE_ARCHITECTURE') # Binary architecture
 #  release/ \d+ . \d+ . \d+ [ . \d+ ] [ \+   \w+   ]
 #           major minor patch revision  special name
 versionPattern = re.compile(r'^(\d+\.\d+\.\d+)(\.\d+)?(\+\w+)?$')
-releasePattern = re.compile(r'^release/((?:\d+\.\d+\.\d+)(?:\.\d+)?(?:\+\w+)?)$')
+releasePattern = re.compile(r'^(?:remotes/origin/)?release/((?:\d+\.\d+\.\d+)(?:\.\d+)?(?:\+\w+)?)$')
 
 
 class ReleaseIsNotNormalized(RuntimeError):
@@ -67,7 +67,7 @@ def getFirstNormalizedVersion():
         for ref in refs:
             debugm('Checking ' + ref)
             # Get all branches that contains this reference
-            branchesCommand = 'git branch --contains ' + ref
+            branchesCommand = 'git branch -a --contains ' + ref
             branches = subprocess.check_output(branchesCommand.split(' ')).decode('UTF-8').split('\n')
             branches.remove('')
             branches.reverse()

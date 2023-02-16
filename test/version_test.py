@@ -166,6 +166,12 @@ class Test_getVersionFromCurrentBranch(unittest.TestCase):
     def test_allphanumeric2(self):
         self.assertEqual(version.getVersionFromCurrentBranch('release/1.2.3.4+RS232'), '1.2.3.4+RS232')
 
+    def test_remote1(self):
+        self.assertEqual(version.getVersionFromCurrentBranch('remotes/origin/release/1.2.3.4+RS232'), '1.2.3.4+RS232')
+    
+    def test_remote1(self):
+        self.assertEqual(version.getVersionFromCurrentBranch('remotes/origin/release/2.13.0'), '2.13.0')
+
 
 class Test_debVersioning(unittest.TestCase):
     def test_void(self):
