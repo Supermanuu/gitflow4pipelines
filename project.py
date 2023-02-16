@@ -1,11 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import re
-import subprocess
 
-def get_url() -> str:
-    urlOutput = subprocess.check_output('git remote get-url origin'.split(' ')).decode('UTF-8').split('\n')
-    urlOutput.remove('')
+from execute_shell import execute_shell
+
+def get_url():
+    urlOutput = execute_shell('git remote get-url origin')
     if len(urlOutput) == 1:
         return urlOutput[0]
     else:

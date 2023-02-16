@@ -1,10 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import os
 import re
-import subprocess
+import sys
 
 import project
+from execute_shell import execute_shell
 
 
 # Version format:
@@ -24,12 +25,12 @@ class ReleaseIsNotNormalized(RuntimeError):
     pass
 
 
-def debugm(message : str):
+def debugm(message):
     '''Print this message on debug run'''
     if global_debug: print(message)
 
 
-def split_version(version : str):
+def split_version(version):
     '''
     Parses a version and returns a dictionary with major, minor, patch, revision and identifier
 
@@ -50,7 +51,7 @@ def split_version(version : str):
         }
 
 
-def get_version_from_current_branch(branch : str):
+def get_version_from_current_branch(branch):
     '''Version from branch name'''
     debugm('Checking \'' + branch + '\'')
     found = global_release_pattern.match(branch)
@@ -63,8 +64,7 @@ def get_version_from_current_branch(branch : str):
 def get_first_normalized_version():
     '''Branch name from this git branch, iterate until first good named branch'''
     # Get all references from this commit
-    refs = subprocess.check_output('git rev-list HEAD'.split(' ')).decode('UTF-8').split('\n')
-    refs.remove('')
+    refs = execute_shell('git rev-list HEAD')
     if len(refs) == 0:
         raise RuntimeError('No refs found')
     else:
@@ -72,8 +72,7 @@ def get_first_normalized_version():
             debugm('Checking ' + ref)
             # Get all branches that contains this reference
             branchesCommand = 'git branch -a --sort=-committerdate --contains ' + ref
-            branches = subprocess.check_output(branchesCommand.split(' ')).decode('UTF-8').split('\n')
-            branches.remove('')
+            branches = execute_shell(branchesCommand)
             branches.reverse()
             debugm(branches)
             if len(branches) == 0:
@@ -89,8 +88,7 @@ def get_first_normalized_version():
 
 def get_version():
     # Branch name from this git branch, else iterate until first good named branch
-    thisBranch = subprocess.check_output('git rev-parse --abbrev-ref HEAD'.split(' ')).decode('UTF-8').split('\n')
-    thisBranch.remove('')
+    thisBranch = execute_shell('git rev-parse --abbrev-ref HEAD')
     if len(thisBranch) > 0:
         try:
             version = get_version_from_current_branch(thisBranch[0])
@@ -140,16 +138,34 @@ def format_version(version, deb_version = False, build_id = None, user_id = None
 
 if __name__ == '__main__':
     # Arguments
-    import argparse
-    parser = argparse.ArgumentParser(description='Manages the version change through git.')
-    show = parser.add_mutually_exclusive_group()
-    show.add_argument('-1', '--major'   , action="store_true", help='Shows major version')
-    show.add_argument('-2', '--minor'   , action="store_true", help='Shows minor version')
-    show.add_argument('-3', '--patch'   , action="store_true", help='Shows patch version')
-    show.add_argument('-4', '--revision', action="store_true", help='Shows revision version')
-    show.add_argument('-5', '--build'   , action="store_true", help='Shows build version')
-    import sys
-    args = parser.parse_args(sys.argv[1:])
+    if sys.version_info[0] == 2:
+        from dotdict import Dotdict
+        if len(sys.argv) > 1:
+            args = Dotdict({
+                'major'     : sys.argv[1] == '-1' or sys.argv[1] == '--major',
+                'minor'     : sys.argv[1] == '-2' or sys.argv[1] == '--minor',
+                'patch'     : sys.argv[1] == '-3' or sys.argv[1] == '--patch',
+                'revision'  : sys.argv[1] == '-4' or sys.argv[1] == '--revision',
+                'build'     : sys.argv[1] == '-5' or sys.argv[1] == '--build'
+            })
+        else:
+            args = Dotdict({
+                'major'     : False,
+                'minor'     : False,
+                'patch'     : False,
+                'revision'  : False,
+                'build'     : False
+            })
+    else:
+        import argparse
+        parser = argparse.ArgumentParser(description='Manages the version change through git.')
+        show = parser.add_mutually_exclusive_group()
+        show.add_argument('-1', '--major'   , action="store_true", help='Shows major version')
+        show.add_argument('-2', '--minor'   , action="store_true", help='Shows minor version')
+        show.add_argument('-3', '--patch'   , action="store_true", help='Shows patch version')
+        show.add_argument('-4', '--revision', action="store_true", help='Shows revision version')
+        show.add_argument('-5', '--build'   , action="store_true", help='Shows build version')
+        args = parser.parse_args(sys.argv[1:])
 
     # Environment variables
     user_id = os.getenv('USER_ID') # Name for non CI versions

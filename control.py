@@ -1,15 +1,16 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import os
+
 import version
 import project
 
 
-def defaultIfNone(s : str, default : str = '') -> str:
+def defaultIfNone(s, default = ''):
     return default if s == None else s
 
 
-def getControlFile() -> str:
+def getControlFile():
     section = os.getenv('PACKAGE_SECTION')
     priority = os.getenv('PACKAGE_PRIORITY')
     maintainer = os.getenv('PACKAGE_MAINTAINER')
