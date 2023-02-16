@@ -4,14 +4,14 @@ import unittest # The test framework
 import project # The code to test
 
 
-class Test_getName(unittest.TestCase):
+class Test_get_name(unittest.TestCase):
     def test_get(self):
-        self.assertEqual(project.getName(), 'versionContainer')
+        self.assertEqual(project.get_name(), 'versionContainer')
 
 
-class Test_getURL(unittest.TestCase):
+class Test_get_url(unittest.TestCase):
     def test_get(self):
-        self.assertEqual(project.getURL(), 'git@ssh.dev.azure.com:v3/POSITIONERS/Tools/versionContainer')
+        self.assertEqual(project.get_url(), 'git@ssh.dev.azure.com:v3/POSITIONERS/Tools/versionContainer')
 
 
 if __name__ == '__main__':

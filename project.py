@@ -3,7 +3,7 @@
 import re
 import subprocess
 
-def getURL() -> str:
+def get_url() -> str:
     urlOutput = subprocess.check_output('git remote get-url origin'.split(' ')).decode('UTF-8').split('\n')
     urlOutput.remove('')
     if len(urlOutput) == 1:
@@ -12,9 +12,9 @@ def getURL() -> str:
         raise RuntimeError('Cannot determine git remote url')
 
 
-def getName():
+def get_name():
     projectNamePattern = re.compile(r'^.*/([^/]+)$')
-    found = projectNamePattern.match(getURL())
+    found = projectNamePattern.match(get_url())
     if found == None:
         raise RuntimeError('Cannot determine repo name from URL')
     else:
@@ -22,4 +22,4 @@ def getName():
 
 
 if __name__ == '__main__':
-    print(getName())
+    print(get_name())

@@ -133,7 +133,7 @@ def format_version(version, deb_version = False, build_id = None, user_id = None
         if architecture != None:
             version_string += '_' + architecture
         if project_name:
-            version_string = project.getName() + '_' + version_string
+            version_string = project.get_name() + '_' + version_string
     
     return version_string
 

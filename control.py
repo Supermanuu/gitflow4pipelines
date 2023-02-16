@@ -21,8 +21,8 @@ def getControlFile() -> str:
     package_description = os.getenv('PACKAGE_DESCRIPTION')
 
     return '\
-Package: ' + project.getName() + '\n\
-Version: ' + version.getVersion() + '\n\
+Package: ' + project.get_name() + '\n\
+Version: ' + version.format_version(version.get_version(), deb_version=True) + '\n\
 Section: ' + defaultIfNone(section, 'apps') + '\n\
 Priority: ' + defaultIfNone(priority, 'optional') + '\n\
 Maintainer: ' + defaultIfNone(maintainer, 'SEDECAL') + '\n\
@@ -31,7 +31,7 @@ Pre-Depends: ' + defaultIfNone(package_pre_depends) + '\n\
 Depends: ' + defaultIfNone(package_depends) + '\n\
 Conflicts: ' + defaultIfNone(package_conflicts) + '\n\
 Replaces: ' + defaultIfNone(package_replaces) + '\n\
-Homepage: ' + project.getURL() + '\n\
+Homepage: ' + project.get_url() + '\n\
 Description: ' + defaultIfNone(package_description) + '\n'
 
 
