@@ -6,25 +6,34 @@ import version # The code to test
 import os
 import subprocess
 
+def make_test_repo():
+    print('def make_test_repo():')
+    if subprocess.call('rm -rf testRepo'.split(' ')) != 0:
+        raise RuntimeError('Cannot remove test repo')
+    if subprocess.call('mkdir testRepo'.split(' ')) != 0:
+        raise RuntimeError('Cannot create test repo directory')
+    os.chdir('testRepo')
+    if subprocess.call('git init'.split(' ')) != 0 \
+        or subprocess.call('git checkout -b main'.split(' ')) != 0 \
+        or subprocess.call('git config user.email you@example.com'.split(' ')) != 0 \
+        or subprocess.call('git config user.name Name'.split(' ')) != 0 \
+        or subprocess.call('git remote add origin https://127.0.0.1/what/an/url/testRepo'.split(' ')) != 0:
+        raise RuntimeError('Cannot create test repo')
+
 class Test_get_version(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        if subprocess.call('rm -rf testRepo'.split(' ')) != 0:
-            raise RuntimeError('Cannot remove test repo')
-        if subprocess.call('mkdir testRepo'.split(' ')) != 0 \
-            or subprocess.call('git -C testRepo init'.split(' ')) != 0 \
-            or subprocess.call('git -C testRepo checkout -b main'.split(' ')) != 0 \
-            or subprocess.call('git -C testRepo remote add origin https://127.0.0.1/what/an/url/testRepo'.split(' ')) != 0 \
-            or subprocess.call('git -C testRepo config user.email you@example.com'.split(' ')) != 0 \
-            or subprocess.call('git -C testRepo config user.name Name'.split(' ')) != 0:
-            raise RuntimeError('Cannot create test repo')
-        os.chdir('testRepo')
+        make_test_repo()
 
     @classmethod
     def tearDownClass(cls):
         os.chdir('..')
 
     def test_01firstRelease(self):
+        import sys
+        if sys.version_info[0] == 2:
+            # Python 2 has not setup method test
+            make_test_repo()
         self.assertEqual(subprocess.call('touch first'.split(' ')), 0)
         self.assertEqual(subprocess.call('git add first'.split(' ')), 0)
         self.assertEqual(subprocess.call('git commit -m first'.split(' ')), 0)
