@@ -13,6 +13,9 @@ RUN apt-get update -y \
 COPY *.py /usr/bin/
 COPY *.sh /usr/bin/
 
+# Default python
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
 # Working dir
 RUN mkdir -p /home/root/workdir/
 WORKDIR /home/root/workdir/
