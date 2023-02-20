@@ -5,6 +5,14 @@ services:
     image: &image 192.168.0.119:50000/version:azure
     build: .
     network_mode: &nmode "host"
+  shell:
+    image: *image
+    command: /bin/bash
+    volumes:
+      - ./:/home/root/workdir/
+    network_mode: *nmode
+    working_dir: /home/root/workdir/
+    user: "${EXTERNAL_UID:-1000}:${EXTERNAL_GID:-1000}"
   lint-docker:
     image: hadolint/hadolint
     command: hadolint /var/repo/Dockerfile
