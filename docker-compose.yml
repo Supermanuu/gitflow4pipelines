@@ -36,4 +36,21 @@ services:
       - ./:/home/root/workdir/
     network_mode: *nmode
     working_dir: /home/root/workdir/
-    user: "${EXTERNAL_UID:-1000}:${EXTERNAL_GID:-1000}"
+    user: &pythonUser "${EXTERNAL_UID:-1000}:${EXTERNAL_GID:-1000}"
+  test-in-builder: # run unit tests on python 2
+    image: 192.168.0.119:50000/builder-ppc:v1
+    command: | 
+      /bin/bash -c "
+        set -e
+        echo 'Brancheck tests:'
+        python -m test.brancheck_test
+        echo 'Version tests:'
+        python -m test.version_test
+        echo 'Project name tests:'
+        python -m test.project_test
+        echo 'All test went ok'
+      "
+    volumes:
+      - ./:/home/user/
+    network_mode: *nmode
+    user: *pythonUser
