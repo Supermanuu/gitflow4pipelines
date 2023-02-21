@@ -11,6 +11,10 @@ def defaultIfNone(s, default = ''):
 
 
 def getControlFile():
+    # Version variables
+    user_id = os.getenv('USER_ID') # Name for non CI versions
+    build_id = os.getenv('BUILD_ID') # Local or CI version
+
     section = os.getenv('PACKAGE_SECTION')
     priority = os.getenv('PACKAGE_PRIORITY')
     maintainer = os.getenv('PACKAGE_MAINTAINER')
@@ -23,7 +27,7 @@ def getControlFile():
 
     return '\
 Package: ' + project.get_name() + '\n\
-Version: ' + version.format_version(version.get_version(), deb_version=True) + '\n\
+Version: ' + version.format_version(version.get_version(), True, build_id, user_id) + '\n\
 Section: ' + defaultIfNone(section, 'apps') + '\n\
 Priority: ' + defaultIfNone(priority, 'optional') + '\n\
 Maintainer: ' + defaultIfNone(maintainer, 'SEDECAL') + '\n\
