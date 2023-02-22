@@ -100,7 +100,7 @@ def get_version():
 
     return version
 
-def format_version(version, deb_version = False, build_id = None, user_id = None, architecture = None, project_name = False):
+def format_version(version, deb_version = False, build_id = None, user_id = None, architecture = None, project_name = False, project_name_suffix = None):
     '''Takes a version dictionary and generates a string'''
     version_string = ''
 
@@ -131,7 +131,7 @@ def format_version(version, deb_version = False, build_id = None, user_id = None
         if architecture != None:
             version_string += '_' + architecture
         if project_name:
-            version_string = project.get_name() + '_' + version_string
+            version_string = project.get_name(project_name_suffix) + '_' + version_string
     
     return version_string
 
@@ -172,6 +172,7 @@ if __name__ == '__main__':
     build_id = os.getenv('BUILD_ID') # Local or CI version
     deb_version = os.getenv('DEB_VERSION') # DEB version formatting
     project_name = os.getenv('DEB_PROJECT') # Project name
+    project_name_suffix = os.getenv('DEB_PROJECT_SUFFIX') # Project name suffix
     architecture = os.getenv('PACKAGE_ARCHITECTURE') # Binary architecture
 
     version = get_version()
@@ -186,4 +187,4 @@ if __name__ == '__main__':
     elif args.revision: 
         print(version['revision'] if version['revision'] != '' else 0)
     else:
-        print(format_version(version, deb_version != None, build_id, user_id, architecture, project_name != None))
+        print(format_version(version, deb_version != None, build_id, user_id, architecture, project_name != None, project_name_suffix))

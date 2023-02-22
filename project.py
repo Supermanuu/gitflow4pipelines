@@ -12,14 +12,16 @@ def get_url():
         raise RuntimeError('Cannot determine git remote url')
 
 
-def get_name():
+def get_name(project_name_suffix = None):
     projectNamePattern = re.compile(r'^.*/([^/]+)$')
     found = projectNamePattern.match(get_url())
     if found == None:
         raise RuntimeError('Cannot determine repo name from URL')
     else:
-        return found.group(1)
+        suffix_or_empty = project_name_suffix if project_name_suffix != None else ''
+        return found.group(1) + suffix_or_empty
 
 
 if __name__ == '__main__':
-    print(get_name())
+    import os
+    print(get_name(os.getenv('DEB_PROJECT_SUFFIX')))

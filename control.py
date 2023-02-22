@@ -14,6 +14,7 @@ def getControlFile():
     # Version variables
     user_id = os.getenv('USER_ID') # Name for non CI versions
     build_id = os.getenv('BUILD_ID') # Local or CI version
+    project_name_suffix = os.getenv('DEB_PROJECT_SUFFIX') # Project name suffix
 
     section = os.getenv('PACKAGE_SECTION')
     priority = os.getenv('PACKAGE_PRIORITY')
@@ -26,7 +27,7 @@ def getControlFile():
     package_description = os.getenv('PACKAGE_DESCRIPTION')
 
     return '\
-Package: ' + project.get_name() + '\n\
+Package: ' + project.get_name(project_name_suffix) + '\n\
 Version: ' + version.format_version(version.get_version(), True, build_id, user_id) + '\n\
 Section: ' + defaultIfNone(section, 'apps') + '\n\
 Priority: ' + defaultIfNone(priority, 'optional') + '\n\

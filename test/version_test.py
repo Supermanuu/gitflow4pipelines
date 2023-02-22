@@ -343,15 +343,25 @@ class Test_format_version(unittest.TestCase):
     def test_revision3lolasoDebAndProjAndArch(self):
         self.assertEqual(version.format_version(version.split_version('1.0.3.4+lolaso1'), deb_version=True, project_name=True, architecture='amd64'), 'versionContainer_4:1.0.3+lolaso1_amd64')
 
-    # Without deb formatting but with identifier, architecture and project name
+    # With deb formatting, identifier, project name and project name suffix
+    def test_revision1lolasoDebAndProjAndArchAndSuff(self):
+        self.assertEqual(version.format_version(version.split_version('1.0.0.4+lolaso1'), deb_version=True, project_name=True, architecture='amd64', project_name_suffix='_omg'), 'versionContainer_omg_4:1.0.0+lolaso1_amd64')
+
+    def test_revision2lolasoDebAndProjAndArchAndSuff(self):
+        self.assertEqual(version.format_version(version.split_version('1.2.0.4+lolaso'), deb_version=True, project_name=True, architecture='amd64', project_name_suffix='_omg'), 'versionContainer_omg_4:1.2.0+lolaso_amd64')
+
+    def test_revision3lolasoDebAndProjAndArchAndSuff(self):
+        self.assertEqual(version.format_version(version.split_version('1.0.3.4+lolaso1'), deb_version=True, project_name=True, architecture='amd64', project_name_suffix='_omg'), 'versionContainer_omg_4:1.0.3+lolaso1_amd64')
+
+    # Without deb formatting but with identifier, architecture, project name and project name suffix
     def test_revision1lolasoAndProjAndArch(self):
-        self.assertEqual(version.format_version(version.split_version('1.0.0.4+lolaso1'), project_name=True, architecture='amd64'), '1.0.0.4+lolaso1')
+        self.assertEqual(version.format_version(version.split_version('1.0.0.4+lolaso1'), project_name=True, architecture='amd64', project_name_suffix='_omg'), '1.0.0.4+lolaso1')
 
     def test_revision2lolasoAndProjAndArch(self):
-        self.assertEqual(version.format_version(version.split_version('1.2.0.4+lolaso'), project_name=True, architecture='amd64'), '1.2.0.4+lolaso')
+        self.assertEqual(version.format_version(version.split_version('1.2.0.4+lolaso'), project_name=True, architecture='amd64', project_name_suffix='_omg'), '1.2.0.4+lolaso')
 
     def test_revision3lolasoAndProjAndArch(self):
-        self.assertEqual(version.format_version(version.split_version('1.0.3.4+lolaso1'), project_name=True, architecture='amd64'), '1.0.3.4+lolaso1')
+        self.assertEqual(version.format_version(version.split_version('1.0.3.4+lolaso1'), project_name=True, architecture='amd64', project_name_suffix='_omg'), '1.0.3.4+lolaso1')
 
 
 if __name__ == '__main__':
