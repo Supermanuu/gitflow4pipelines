@@ -101,7 +101,7 @@ def get_version():
 
     return version
 
-def format_version(version, deb_version = False, build_id = None, user_id = None, architecture = None, project_name = False, project_name_suffix = None):
+def format_version(version, deb_version = False, user_id = None, architecture = None, project_name = False, project_name_suffix = None):
     '''Takes a version dictionary and generates a string'''
     version_string = ''
 
@@ -114,11 +114,11 @@ def format_version(version, deb_version = False, build_id = None, user_id = None
 
     # Normal revision
     if version['revision'] != '' and not deb_version:
-            version_string += '.' + version['revision']
+        version_string += '.' + version['revision']
 
     # Build ID
-    if build_id != None:
-            version_string += '-' + build_id
+    if version['build'] != '' and version['build'] != '0':
+        version_string += '-' + version['build']
 
     # Identifier
     version_string += version['identifier']
@@ -137,17 +137,18 @@ def format_version(version, deb_version = False, build_id = None, user_id = None
     return version_string
 
 
-if __name__ == '__main__':
-    # Arguments
+def get_cli_options(cmd_args):
+    '''Parses command line arguments and returns a dictionary'''
     if sys.version_info[0] == 2:
         from dotdict import Dotdict
-        if len(sys.argv) > 1:
+        if len(cmd_args) > 1:
             args = Dotdict({
-                'major'     : sys.argv[1] == '-1' or sys.argv[1] == '--major',
-                'minor'     : sys.argv[1] == '-2' or sys.argv[1] == '--minor',
-                'patch'     : sys.argv[1] == '-3' or sys.argv[1] == '--patch',
-                'revision'  : sys.argv[1] == '-4' or sys.argv[1] == '--revision',
-                'build'     : sys.argv[1] == '-5' or sys.argv[1] == '--build'
+                'major'     : cmd_args[0] == '-1' or cmd_args[0] == '--major',
+                'minor'     : cmd_args[0] == '-2' or cmd_args[0] == '--minor',
+                'patch'     : cmd_args[0] == '-3' or cmd_args[0] == '--patch',
+                'revision'  : cmd_args[0] == '-4' or cmd_args[0] == '--revision',
+                'build'     : cmd_args[0] == '-5' or cmd_args[0] == '--build',
+                'tag'       : cmd_args[0] == '-t' or cmd_args[0] == '--tag'
             })
         else:
             args = Dotdict({
@@ -155,7 +156,8 @@ if __name__ == '__main__':
                 'minor'     : False,
                 'patch'     : False,
                 'revision'  : False,
-                'build'     : False
+                'build'     : False,
+                'tag'       : False
             })
     else:
         import argparse
@@ -167,8 +169,11 @@ if __name__ == '__main__':
         show.add_argument('-4', '--revision', action="store_true", help='Shows revision version')
         show.add_argument('-5', '--build'   , action="store_true", help='Shows build version')
         show.add_argument('-t', '--tag'     , action="store_true", help='Iterate over tags instead of branches')
-        args = parser.parse_args(sys.argv[1:])
+        args = parser.parse_args(cmd_args)
+    return args
 
+
+if __name__ == '__main__':
     # Environment variables
     user_id = os.getenv('USER_ID') # Name for non CI versions
     build_id = os.getenv('BUILD_ID') # Local or CI version
@@ -177,7 +182,11 @@ if __name__ == '__main__':
     project_name_suffix = os.getenv('DEB_PROJECT_SUFFIX') # Project name suffix
     architecture = os.getenv('PACKAGE_ARCHITECTURE') # Binary architecture
 
+    args = get_cli_options(sys.argv[1:])
+
     version = get_version()
+    if not args.tag:
+        version['build'] = build_id if build_id != None else '0'
     if args.major:
         print(version['major'])
     elif args.minor: 
@@ -185,8 +194,8 @@ if __name__ == '__main__':
     elif args.patch: 
         print(version['patch'])
     elif args.build: 
-        print(build_id if build_id != None else 0)
+        print(version['build'])
     elif args.revision: 
-        print(version['revision'] if version['revision'] != '' else 0)
+        print(version['revision'] if version['revision'] != '' else '0')
     else:
-        print(format_version(version, deb_version != None, build_id, user_id, architecture, project_name != None, project_name_suffix))
+        print(format_version(version, deb_version != None, user_id, architecture, project_name != None, project_name_suffix))

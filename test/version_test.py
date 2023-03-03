@@ -192,6 +192,129 @@ class Test_get_version_from_current_branch(unittest.TestCase):
     def test_remote1(self):
         self.assertEqual(version.get_version_from_current_branch('remotes/origin/release/2.13.0'), {'major':'2', 'minor':'13', 'patch':'0', 'revision':'', 'build':'', 'identifier':''})
 
+
+class Test_get_cli_options(unittest.TestCase):
+    def test_void(self):
+        self.assertRaises(RuntimeError, version.get_cli_options, '')
+
+    def test_void(self):
+        opts = version.get_cli_options([])
+        self.assertEqual(opts.major, False)
+        self.assertEqual(opts.minor, False)
+        self.assertEqual(opts.patch, False)
+        self.assertEqual(opts.revision, False)
+        self.assertEqual(opts.build, False)
+        self.assertEqual(opts.tag, False)
+
+    def test_major(self):
+        opts = version.get_cli_options(['--major'])
+        self.assertEqual(opts.major, True)
+        self.assertEqual(opts.minor, False)
+        self.assertEqual(opts.patch, False)
+        self.assertEqual(opts.revision, False)
+        self.assertEqual(opts.build, False)
+        self.assertEqual(opts.tag, False)
+
+    def test_minor(self):
+        opts = version.get_cli_options(['--minor'])
+        self.assertEqual(opts.major, False)
+        self.assertEqual(opts.minor, True)
+        self.assertEqual(opts.patch, False)
+        self.assertEqual(opts.revision, False)
+        self.assertEqual(opts.build, False)
+        self.assertEqual(opts.tag, False)
+
+    def test_patch(self):
+        opts = version.get_cli_options(['--patch'])
+        self.assertEqual(opts.major, False)
+        self.assertEqual(opts.minor, False)
+        self.assertEqual(opts.patch, True)
+        self.assertEqual(opts.revision, False)
+        self.assertEqual(opts.build, False)
+        self.assertEqual(opts.tag, False)
+
+    def test_revision(self):
+        opts = version.get_cli_options(['--revision'])
+        self.assertEqual(opts.major, False)
+        self.assertEqual(opts.minor, False)
+        self.assertEqual(opts.patch, False)
+        self.assertEqual(opts.revision, True)
+        self.assertEqual(opts.build, False)
+        self.assertEqual(opts.tag, False)
+
+    def test_build(self):
+        opts = version.get_cli_options(['--build'])
+        self.assertEqual(opts.major, False)
+        self.assertEqual(opts.minor, False)
+        self.assertEqual(opts.patch, False)
+        self.assertEqual(opts.revision, False)
+        self.assertEqual(opts.build, True)
+        self.assertEqual(opts.tag, False)
+
+    def test_tag(self):
+        opts = version.get_cli_options(['--tag'])
+        self.assertEqual(opts.major, False)
+        self.assertEqual(opts.minor, False)
+        self.assertEqual(opts.patch, False)
+        self.assertEqual(opts.revision, False)
+        self.assertEqual(opts.build, False)
+        self.assertEqual(opts.tag, True)
+
+    def test_short_major(self):
+        opts = version.get_cli_options(['-1'])
+        self.assertEqual(opts.major, True)
+        self.assertEqual(opts.minor, False)
+        self.assertEqual(opts.patch, False)
+        self.assertEqual(opts.revision, False)
+        self.assertEqual(opts.build, False)
+        self.assertEqual(opts.tag, False)
+
+    def test_short_minor(self):
+        opts = version.get_cli_options(['-2'])
+        self.assertEqual(opts.major, False)
+        self.assertEqual(opts.minor, True)
+        self.assertEqual(opts.patch, False)
+        self.assertEqual(opts.revision, False)
+        self.assertEqual(opts.build, False)
+        self.assertEqual(opts.tag, False)
+
+    def test_short_patch(self):
+        opts = version.get_cli_options(['-3'])
+        self.assertEqual(opts.major, False)
+        self.assertEqual(opts.minor, False)
+        self.assertEqual(opts.patch, True)
+        self.assertEqual(opts.revision, False)
+        self.assertEqual(opts.build, False)
+        self.assertEqual(opts.tag, False)
+
+    def test_short_revision(self):
+        opts = version.get_cli_options(['-4'])
+        self.assertEqual(opts.major, False)
+        self.assertEqual(opts.minor, False)
+        self.assertEqual(opts.patch, False)
+        self.assertEqual(opts.revision, True)
+        self.assertEqual(opts.build, False)
+        self.assertEqual(opts.tag, False)
+
+    def test_short_build(self):
+        opts = version.get_cli_options(['-5'])
+        self.assertEqual(opts.major, False)
+        self.assertEqual(opts.minor, False)
+        self.assertEqual(opts.patch, False)
+        self.assertEqual(opts.revision, False)
+        self.assertEqual(opts.build, True)
+        self.assertEqual(opts.tag, False)
+
+    def test_short_tag(self):
+        opts = version.get_cli_options(['-t'])
+        self.assertEqual(opts.major, False)
+        self.assertEqual(opts.minor, False)
+        self.assertEqual(opts.patch, False)
+        self.assertEqual(opts.revision, False)
+        self.assertEqual(opts.build, False)
+        self.assertEqual(opts.tag, True)
+
+
 class Test_split_version(unittest.TestCase):
     def test_void(self):
         self.assertRaises(RuntimeError, version.split_version, '')
