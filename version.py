@@ -32,11 +32,10 @@ def debugm(message):
 
 def split_version(version):
     '''
-    Parses a version and returns a dictionary with major, minor, patch, revision and identifier
+    Parses a version and returns a dictionary with major, minor, patch, revision, build and identifier
 
     Immportant notes:
-        Revision and identifier can be empty strings if they are not present on version
-        Build id is not present cause it never can be found on a git release branch name
+        Revision, build and identifier can be empty strings if they are not present on version
     '''
     found = global_version_pattern.match(version)
     if found == None:
@@ -60,6 +59,17 @@ def get_version_from_current_branch(branch):
         raise ReleaseIsNotNormalized('This branch does not follow the naming convention ' + global_release_pattern.pattern)
     else:
         return split_version(found.group(1))
+
+
+def get_first_normalized_tag():
+    '''Tag name from this git branch, iterate until first good named branch'''
+    tags = []
+    try:
+        tags = execute_shell('git describe --tags --abbrev=0')
+    finally:
+        if len(tags) == 0:
+            raise RuntimeError('No tags found')
+    return split_version(tags[0])
 
 
 def get_first_normalized_version():
@@ -87,14 +97,17 @@ def get_first_normalized_version():
                         pass
 
 
-def get_version():
-    # Branch name from this git branch, else iterate until first good named branch
-    thisBranch = execute_shell('git rev-parse --abbrev-ref HEAD')
-    if len(thisBranch) > 0:
-        try:
-            version = get_version_from_current_branch(thisBranch[0])
-        except ReleaseIsNotNormalized: 
-            version = get_first_normalized_version()
+def get_version(from_tag = False):
+    if from_tag:
+        version = get_first_normalized_tag()
+    else:
+        # Branch name from this git branch, else iterate until first good named branch
+        thisBranch = execute_shell('git rev-parse --abbrev-ref HEAD')
+        if len(thisBranch) > 0:
+            try:
+                version = get_version_from_current_branch(thisBranch[0])
+            except ReleaseIsNotNormalized: 
+                version = get_first_normalized_version()
 
     if version == None:
         raise RuntimeError('No version could be parsed')
@@ -184,7 +197,7 @@ if __name__ == '__main__':
 
     args = get_cli_options(sys.argv[1:])
 
-    version = get_version()
+    version = get_version(args.tag)
     if not args.tag:
         version['build'] = build_id if build_id != None else '0'
     if args.major:

@@ -39,25 +39,30 @@ class Test_get_version(unittest.TestCase):
         self.assertEqual(subprocess.call('git commit -m first'.split(' ')), 0)
         self.assertEqual(subprocess.call('git checkout -b release/1.0.0'.split(' ')), 0)
         self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'0', 'revision':'', 'build':'', 'identifier':''})
+        self.assertRaises(RuntimeError, version.get_version, from_tag=True)
 
     def test_02secondRelease(self):
+        self.assertEqual(subprocess.call('git tag 1.0.0'.split(' ')), 0)
         self.assertEqual(subprocess.call('git checkout -b release/1.0.1'.split(' ')), 0)
         self.assertEqual(subprocess.call('touch second'.split(' ')), 0)
         self.assertEqual(subprocess.call('git add second'.split(' ')), 0)
         self.assertEqual(subprocess.call('git commit -m second'.split(' ')), 0)
         self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'1', 'revision':'', 'build':'', 'identifier':''})
+        self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'0', 'revision':'', 'build':'', 'identifier':''})
 
     def test_03secondReleaseAgain(self):
         self.assertEqual(subprocess.call('touch nope'.split(' ')), 0)
         self.assertEqual(subprocess.call('git add nope'.split(' ')), 0)
         self.assertEqual(subprocess.call('git commit -m nope'.split(' ')), 0)
         self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'1', 'revision':'', 'build':'', 'identifier':''})
+        self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'0', 'revision':'', 'build':'', 'identifier':''})
 
     def test_04secondReleaseAgainAgain(self):
         self.assertEqual(subprocess.call('touch nopenope'.split(' ')), 0)
         self.assertEqual(subprocess.call('git add nopenope'.split(' ')), 0)
         self.assertEqual(subprocess.call('git commit -m nopenope'.split(' ')), 0)
         self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'1', 'revision':'', 'build':'', 'identifier':''})
+        self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'0', 'revision':'', 'build':'', 'identifier':''})
 
     def test_05thirthRelease(self):
         self.assertEqual(subprocess.call('git checkout -b release/1.0.2'.split(' ')), 0)
@@ -65,24 +70,33 @@ class Test_get_version(unittest.TestCase):
         self.assertEqual(subprocess.call('git add thirth'.split(' ')), 0)
         self.assertEqual(subprocess.call('git commit -m thirth'.split(' ')), 0)
         self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'2', 'revision':'', 'build':'', 'identifier':''})
+        self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'0', 'revision':'', 'build':'', 'identifier':''})
 
     def test_06thirthReleaseWithOtherAdditionalRelease(self):
         self.assertEqual(subprocess.call('git checkout -b release/1.0.2+1noAddition'.split(' ')), 0)
         self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'2', 'revision':'', 'build':'', 'identifier':'+1noAddition'})
+        self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'0', 'revision':'', 'build':'', 'identifier':''})
 
-    def test_07nonRelease(self):
+    def test_07thirthReleaseTag(self):
+        self.assertEqual(subprocess.call('git tag 1.0.2-123'.split(' ')), 0)
+        self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'2', 'revision':'', 'build':'', 'identifier':'+1noAddition'})
+        self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'2', 'revision':'', 'build':'123', 'identifier':''})
+
+    def test_08nonRelease(self):
         self.assertEqual(subprocess.call('git checkout -b feature/none'.split(' ')), 0)
         self.assertEqual(subprocess.call('touch none'.split(' ')), 0)
         self.assertEqual(subprocess.call('git add none'.split(' ')), 0)
         self.assertEqual(subprocess.call('git commit -m none'.split(' ')), 0)
         # We have to choose the not noAddition branch name cause this branch has no different changes from 1.0.2
         self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'2', 'revision':'', 'build':'', 'identifier':''})
+        self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'2', 'revision':'', 'build':'123', 'identifier':''})
 
-    def test_08forthRelease(self):
+    def test_09forthRelease(self):
         self.assertEqual(subprocess.call('git checkout -b release/1.0.3'.split(' ')), 0)
         self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'3', 'revision':'', 'build':'', 'identifier':''})
+        self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'2', 'revision':'', 'build':'123', 'identifier':''})
 
-    def test_09flashback(self):
+    def test_10flashback(self):
         self.assertEqual(subprocess.call('git checkout release/1.0.1'.split(' ')), 0)
         self.assertEqual(subprocess.call('git checkout -b feature/flashback'.split(' ')), 0)
         self.assertEqual(subprocess.call('touch flashback'.split(' ')), 0)
@@ -90,18 +104,31 @@ class Test_get_version(unittest.TestCase):
         self.assertEqual(subprocess.call('git commit -m flashback'.split(' ')), 0)
         # We have always to choose the most ancient version cause is where the commit was really done. After, the newest versions used it to build its changes
         self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'1', 'revision':'', 'build':'', 'identifier':''})
+        self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'0', 'revision':'', 'build':'', 'identifier':''})
 
-    def test_10flashbackRelease(self):
+    def test_11flashbackRelease(self):
         self.assertEqual(subprocess.call('git checkout -b release/1.0.1+flashback'.split(' ')), 0)
         self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'1', 'revision':'', 'build':'', 'identifier':'+flashback'})
+        self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'0', 'revision':'', 'build':'', 'identifier':''})
 
-    def test_11thirthReleaseRevision(self):
+    def test_12flashbackTag(self):
+        self.assertEqual(subprocess.call('git tag 1.0.1-100+flashback'.split(' ')), 0)
+        self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'1', 'revision':'', 'build':'', 'identifier':'+flashback'})
+        self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'1', 'revision':'', 'build':'100', 'identifier':'+flashback'})
+
+    def test_13thirthReleaseRevision(self):
         self.assertEqual(subprocess.call('git checkout release/1.0.3'.split(' ')), 0)
         self.assertEqual(subprocess.call('git checkout -b release/1.0.3.1'.split(' ')), 0)
         self.assertEqual(subprocess.call('touch revision'.split(' ')), 0)
         self.assertEqual(subprocess.call('git add revision'.split(' ')), 0)
         self.assertEqual(subprocess.call('git commit -m revision'.split(' ')), 0)
         self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'3', 'revision':'1', 'build':'', 'identifier':''})
+        self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'2', 'revision':'', 'build':'123', 'identifier':''})
+
+    def test_14flashbackTag(self):
+        self.assertEqual(subprocess.call('git tag 1.0.3.1-200'.split(' ')), 0)
+        self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'3', 'revision':'1', 'build':'', 'identifier':''})
+        self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'3', 'revision':'1', 'build':'200', 'identifier':''})
 
 
 class Test_get_version_from_current_branch(unittest.TestCase):
@@ -357,6 +384,9 @@ class Test_split_version(unittest.TestCase):
 
     def test_revision3(self):
         self.assertEqual(version.split_version('1.0.3.4'), {'major':'1', 'minor':'0', 'patch':'3', 'revision':'4', 'build':'', 'identifier':''})
+        
+    def test_revision3Build(self):
+        self.assertEqual(version.split_version('1.0.3.4-5'), {'major':'1', 'minor':'0', 'patch':'3', 'revision':'4', 'build':'5', 'identifier':''})
 
     # With +
     def test_normal1lolaso(self):
@@ -377,6 +407,9 @@ class Test_split_version(unittest.TestCase):
     def test_revision3lolaso(self):
         self.assertEqual(version.split_version('1.0.3.4+lolaso1'), {'major':'1', 'minor':'0', 'patch':'3', 'revision':'4', 'build':'', 'identifier':'+lolaso1'})
 
+    def test_revision3lolasoBuild(self):
+        self.assertEqual(version.split_version('1.0.3.4-5+lolaso1'), {'major':'1', 'minor':'0', 'patch':'3', 'revision':'4', 'build':'5', 'identifier':'+lolaso1'})
+
 
 class Test_format_version(unittest.TestCase):
     def test_normal1(self):
@@ -396,6 +429,9 @@ class Test_format_version(unittest.TestCase):
 
     def test_revision3(self):
         self.assertEqual(version.format_version(version.split_version('1.0.3.4')), '1.0.3.4')
+    
+    def test_build(self):
+        self.assertEqual(version.format_version(version.split_version('1.0.3.4-5')), '1.0.3.4-5')
 
     # With identifier
     def test_normal1lolaso(self):
@@ -416,6 +452,9 @@ class Test_format_version(unittest.TestCase):
     def test_revision3lolaso(self):
         self.assertEqual(version.format_version(version.split_version('1.0.3.4+lolaso1')), '1.0.3.4+lolaso1')
 
+    def test_buildlolaso(self):
+        self.assertEqual(version.format_version(version.split_version('1.0.3.4-5+lolaso1')), '1.0.3.4-5+lolaso1')
+
     # With deb formatting
     def test_revision1deb(self):
         self.assertEqual(version.format_version(version.split_version('1.0.0.4'), deb_version=True), '4:1.0.0')
@@ -425,6 +464,9 @@ class Test_format_version(unittest.TestCase):
 
     def test_revision3deb(self):
         self.assertEqual(version.format_version(version.split_version('1.0.3.4'), deb_version=True), '4:1.0.3')
+
+    def test_builddeb(self):
+        self.assertEqual(version.format_version(version.split_version('1.0.3.4-5'), deb_version=True), '4:1.0.3-5')
 
     # With deb formatting and identifier
     def test_revision1lolasoDeb(self):
@@ -436,6 +478,9 @@ class Test_format_version(unittest.TestCase):
     def test_revision3lolasoDeb(self):
         self.assertEqual(version.format_version(version.split_version('1.0.3.4+lolaso1'), deb_version=True), '4:1.0.3+lolaso1')
 
+    def test_buildlolasoDeb(self):
+        self.assertEqual(version.format_version(version.split_version('1.0.3.4-5+lolaso1'), deb_version=True), '4:1.0.3-5+lolaso1')
+
     # With deb formatting, identifier and architecture
     def test_revision1lolasoDebAndArch(self):
         self.assertEqual(version.format_version(version.split_version('1.0.0.4+lolaso1'), deb_version=True, architecture='amd64'), '4:1.0.0+lolaso1_amd64')
@@ -445,6 +490,9 @@ class Test_format_version(unittest.TestCase):
 
     def test_revision3lolasoDebAndArch(self):
         self.assertEqual(version.format_version(version.split_version('1.0.3.4+lolaso1'), deb_version=True, architecture='amd64'), '4:1.0.3+lolaso1_amd64')
+
+    def test_buildlolasoDebAndArch(self):
+        self.assertEqual(version.format_version(version.split_version('1.0.3.4-5+lolaso1'), deb_version=True, architecture='amd64'), '4:1.0.3-5+lolaso1_amd64')
 
     # With deb formatting, identifier and project name
     def test_revision1lolasoDebAndProj(self):
@@ -456,6 +504,9 @@ class Test_format_version(unittest.TestCase):
     def test_revision3lolasoDebAndProj(self):
         self.assertEqual(version.format_version(version.split_version('1.0.3.4+lolaso1'), deb_version=True, project_name=True), 'versionContainer_4:1.0.3+lolaso1')
 
+    def test_buildlolasoDebAndProj(self):
+        self.assertEqual(version.format_version(version.split_version('1.0.3.4-5+lolaso1'), deb_version=True, project_name=True), 'versionContainer_4:1.0.3-5+lolaso1')
+
     # With deb formatting, identifier, architecture and project name
     def test_revision1lolasoDebAndProjAndArch(self):
         self.assertEqual(version.format_version(version.split_version('1.0.0.4+lolaso1'), deb_version=True, project_name=True, architecture='amd64'), 'versionContainer_4:1.0.0+lolaso1_amd64')
@@ -465,6 +516,9 @@ class Test_format_version(unittest.TestCase):
 
     def test_revision3lolasoDebAndProjAndArch(self):
         self.assertEqual(version.format_version(version.split_version('1.0.3.4+lolaso1'), deb_version=True, project_name=True, architecture='amd64'), 'versionContainer_4:1.0.3+lolaso1_amd64')
+
+    def test_buildlolasoDebAndProjAndArch(self):
+        self.assertEqual(version.format_version(version.split_version('1.0.3.4-5+lolaso1'), deb_version=True, project_name=True, architecture='amd64'), 'versionContainer_4:1.0.3-5+lolaso1_amd64')
 
     # With deb formatting, identifier, project name and project name suffix
     def test_revision1lolasoDebAndProjAndArchAndSuff(self):
@@ -476,6 +530,9 @@ class Test_format_version(unittest.TestCase):
     def test_revision3lolasoDebAndProjAndArchAndSuff(self):
         self.assertEqual(version.format_version(version.split_version('1.0.3.4+lolaso1'), deb_version=True, project_name=True, architecture='amd64', project_name_suffix='_omg'), 'versionContainer_omg_4:1.0.3+lolaso1_amd64')
 
+    def test_buildlolasoDebAndProjAndArchAndSuff(self):
+        self.assertEqual(version.format_version(version.split_version('1.0.3.4-5+lolaso1'), deb_version=True, project_name=True, architecture='amd64', project_name_suffix='_omg'), 'versionContainer_omg_4:1.0.3-5+lolaso1_amd64')
+
     # Without deb formatting but with identifier, architecture, project name and project name suffix
     def test_revision1lolasoAndProjAndArch(self):
         self.assertEqual(version.format_version(version.split_version('1.0.0.4+lolaso1'), project_name=True, architecture='amd64', project_name_suffix='_omg'), '1.0.0.4+lolaso1')
@@ -485,6 +542,9 @@ class Test_format_version(unittest.TestCase):
 
     def test_revision3lolasoAndProjAndArch(self):
         self.assertEqual(version.format_version(version.split_version('1.0.3.4+lolaso1'), project_name=True, architecture='amd64', project_name_suffix='_omg'), '1.0.3.4+lolaso1')
+
+    def test_buildlolasoAndProjAndArch(self):
+        self.assertEqual(version.format_version(version.split_version('1.0.3.4-5+lolaso1'), project_name=True, architecture='amd64', project_name_suffix='_omg'), '1.0.3.4-5+lolaso1')
 
 
 if __name__ == '__main__':
