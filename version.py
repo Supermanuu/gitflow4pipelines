@@ -15,7 +15,7 @@ from execute_shell import execute_shell
 # Release format:
 #  release/ \d+ . \d+ . \d+ [ . \d+ ] [ \+   \w+   ]
 #           major minor patch revision  identifier
-global_version_pattern = re.compile(r'^(\d+)\.(\d+)\.(\d+)((?:\.\d+)?)((?:\+\w+)?)$')
+global_version_pattern = re.compile(r'^(\d+)\.(\d+)\.(\d+)((?:\.\d+)?)((?:-\d+)?)((?:\+\w+)?)$')
 global_release_pattern = re.compile(r'^(?:remotes/origin/)?release/((?:\d+\.\d+\.\d+)(?:\.\d+)?(?:\+\w+)?)$')
 global_debug = os.getenv('DEBUG')
 
@@ -47,7 +47,8 @@ def split_version(version):
             'minor': found.group(2),
             'patch': found.group(3),
             'revision': found.group(4).replace('.',''),
-            'identifier': found.group(5) 
+            'build': found.group(5).replace('-',''),
+            'identifier': found.group(6) 
         }
 
 
@@ -165,6 +166,7 @@ if __name__ == '__main__':
         show.add_argument('-3', '--patch'   , action="store_true", help='Shows patch version')
         show.add_argument('-4', '--revision', action="store_true", help='Shows revision version')
         show.add_argument('-5', '--build'   , action="store_true", help='Shows build version')
+        show.add_argument('-t', '--tag'     , action="store_true", help='Iterate over tags instead of branches')
         args = parser.parse_args(sys.argv[1:])
 
     # Environment variables
