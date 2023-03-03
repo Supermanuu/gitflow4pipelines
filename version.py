@@ -15,7 +15,7 @@ from execute_shell import execute_shell
 # Release format:
 #  release/ \d+ . \d+ . \d+ [ . \d+ ] [ \+   \w+   ]
 #           major minor patch revision  identifier
-global_version_pattern = re.compile(r'^(\d+)\.(\d+)\.(\d+)((?:\.\d+)?)((?:\+\w+)?)$')
+global_version_pattern = re.compile(r'^(\d+)\.(\d+)\.(\d+)((?:\.\d+)?)((?:-\d+)?)((?:\+\w+)?)$')
 global_release_pattern = re.compile(r'^(?:remotes/origin/)?release/((?:\d+\.\d+\.\d+)(?:\.\d+)?(?:\+\w+)?)$')
 global_debug = os.getenv('DEBUG')
 
@@ -32,11 +32,10 @@ def debugm(message):
 
 def split_version(version):
     '''
-    Parses a version and returns a dictionary with major, minor, patch, revision and identifier
+    Parses a version and returns a dictionary with major, minor, patch, revision, build and identifier
 
     Immportant notes:
-        Revision and identifier can be empty strings if they are not present on version
-        Build id is not present cause it never can be found on a git release branch name
+        Revision, build and identifier can be empty strings if they are not present on version
     '''
     found = global_version_pattern.match(version)
     if found == None:
@@ -47,7 +46,8 @@ def split_version(version):
             'minor': found.group(2),
             'patch': found.group(3),
             'revision': found.group(4).replace('.',''),
-            'identifier': found.group(5) 
+            'build': found.group(5).replace('-',''),
+            'identifier': found.group(6) 
         }
 
 
@@ -59,6 +59,17 @@ def get_version_from_current_branch(branch):
         raise ReleaseIsNotNormalized('This branch does not follow the naming convention ' + global_release_pattern.pattern)
     else:
         return split_version(found.group(1))
+
+
+def get_first_normalized_tag():
+    '''Tag name from this git branch, iterate until first good named branch'''
+    tags = []
+    try:
+        tags = execute_shell('git describe --tags --abbrev=0')
+    finally:
+        if len(tags) == 0:
+            raise RuntimeError('No tags found')
+    return split_version(tags[0])
 
 
 def get_first_normalized_version():
@@ -86,21 +97,24 @@ def get_first_normalized_version():
                         pass
 
 
-def get_version():
-    # Branch name from this git branch, else iterate until first good named branch
-    thisBranch = execute_shell('git rev-parse --abbrev-ref HEAD')
-    if len(thisBranch) > 0:
-        try:
-            version = get_version_from_current_branch(thisBranch[0])
-        except ReleaseIsNotNormalized: 
-            version = get_first_normalized_version()
+def get_version(from_tag = False):
+    if from_tag:
+        version = get_first_normalized_tag()
+    else:
+        # Branch name from this git branch, else iterate until first good named branch
+        thisBranch = execute_shell('git rev-parse --abbrev-ref HEAD')
+        if len(thisBranch) > 0:
+            try:
+                version = get_version_from_current_branch(thisBranch[0])
+            except ReleaseIsNotNormalized: 
+                version = get_first_normalized_version()
 
     if version == None:
         raise RuntimeError('No version could be parsed')
 
     return version
 
-def format_version(version, deb_version = False, build_id = None, user_id = None, architecture = None, project_name = False, project_name_suffix = None):
+def format_version(version, deb_version = False, user_id = None, architecture = None, project_name = False, project_name_suffix = None):
     '''Takes a version dictionary and generates a string'''
     version_string = ''
 
@@ -113,11 +127,11 @@ def format_version(version, deb_version = False, build_id = None, user_id = None
 
     # Normal revision
     if version['revision'] != '' and not deb_version:
-            version_string += '.' + version['revision']
+        version_string += '.' + version['revision']
 
     # Build ID
-    if build_id != None:
-            version_string += '-' + build_id
+    if version['build'] != '' and version['build'] != '0':
+        version_string += '-' + version['build']
 
     # Identifier
     version_string += version['identifier']
@@ -136,17 +150,18 @@ def format_version(version, deb_version = False, build_id = None, user_id = None
     return version_string
 
 
-if __name__ == '__main__':
-    # Arguments
+def get_cli_options(cmd_args):
+    '''Parses command line arguments and returns a dictionary'''
     if sys.version_info[0] == 2:
         from dotdict import Dotdict
-        if len(sys.argv) > 1:
+        if len(cmd_args) > 0:
             args = Dotdict({
-                'major'     : sys.argv[1] == '-1' or sys.argv[1] == '--major',
-                'minor'     : sys.argv[1] == '-2' or sys.argv[1] == '--minor',
-                'patch'     : sys.argv[1] == '-3' or sys.argv[1] == '--patch',
-                'revision'  : sys.argv[1] == '-4' or sys.argv[1] == '--revision',
-                'build'     : sys.argv[1] == '-5' or sys.argv[1] == '--build'
+                'major'     : cmd_args[0] == '-1' or cmd_args[0] == '--major',
+                'minor'     : cmd_args[0] == '-2' or cmd_args[0] == '--minor',
+                'patch'     : cmd_args[0] == '-3' or cmd_args[0] == '--patch',
+                'revision'  : cmd_args[0] == '-4' or cmd_args[0] == '--revision',
+                'build'     : cmd_args[0] == '-5' or cmd_args[0] == '--build',
+                'tag'       : cmd_args[0] == '-t' or cmd_args[0] == '--tag'
             })
         else:
             args = Dotdict({
@@ -154,7 +169,8 @@ if __name__ == '__main__':
                 'minor'     : False,
                 'patch'     : False,
                 'revision'  : False,
-                'build'     : False
+                'build'     : False,
+                'tag'       : False
             })
     else:
         import argparse
@@ -165,8 +181,12 @@ if __name__ == '__main__':
         show.add_argument('-3', '--patch'   , action="store_true", help='Shows patch version')
         show.add_argument('-4', '--revision', action="store_true", help='Shows revision version')
         show.add_argument('-5', '--build'   , action="store_true", help='Shows build version')
-        args = parser.parse_args(sys.argv[1:])
+        show.add_argument('-t', '--tag'     , action="store_true", help='Iterate over tags instead of branches')
+        args = parser.parse_args(cmd_args)
+    return args
 
+
+if __name__ == '__main__':
     # Environment variables
     user_id = os.getenv('USER_ID') # Name for non CI versions
     build_id = os.getenv('BUILD_ID') # Local or CI version
@@ -175,7 +195,11 @@ if __name__ == '__main__':
     project_name_suffix = os.getenv('DEB_PROJECT_SUFFIX') # Project name suffix
     architecture = os.getenv('PACKAGE_ARCHITECTURE') # Binary architecture
 
-    version = get_version()
+    args = get_cli_options(sys.argv[1:])
+
+    version = get_version(args.tag)
+    if not args.tag:
+        version['build'] = build_id if build_id != None else '0'
     if args.major:
         print(version['major'])
     elif args.minor: 
@@ -183,8 +207,8 @@ if __name__ == '__main__':
     elif args.patch: 
         print(version['patch'])
     elif args.build: 
-        print(build_id if build_id != None else 0)
+        print(version['build'])
     elif args.revision: 
-        print(version['revision'] if version['revision'] != '' else 0)
+        print(version['revision'] if version['revision'] != '' else '0')
     else:
-        print(format_version(version, deb_version != None, build_id, user_id, architecture, project_name != None, project_name_suffix))
+        print(format_version(version, deb_version != None, user_id, architecture, project_name != None, project_name_suffix))

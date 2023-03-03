@@ -22,14 +22,13 @@ services:
   test: # run unit tests
     image: python:3.8.10
     command: | 
-      /bin/bash -c "
-        set -e
+      /bin/bash -euo pipefail -c "
         echo 'Brancheck tests:'
-        python3 -m test.brancheck_test
+        python3 -m test.brancheck_test 2>&1 | sed 's+/home/root/workdir/++g'
         echo 'Version tests:'
-        python3 -m test.version_test
+        python3 -m test.version_test 2>&1 | sed 's+/home/root/workdir/++g'
         echo 'Project name tests:'
-        python3 -m test.project_test
+        python3 -m test.project_test 2>&1 | sed 's+/home/root/workdir/++g'
         echo 'All test went ok'
       "
     volumes:
@@ -40,14 +39,13 @@ services:
   test-in-builder: # run unit tests on python 2
     image: 192.168.0.119:50000/builder-ppc:v1
     command: | 
-      /bin/bash -c "
-        set -e
+      /bin/bash -euo pipefail -c "
         echo 'Brancheck tests:'
-        python -m test.brancheck_test
+        python -m test.brancheck_test 2>&1 | sed 's+/home/user/++g'
         echo 'Version tests:'
-        python -m test.version_test
+        python -m test.version_test 2>&1 | sed 's+/home/user/++g'
         echo 'Project name tests:'
-        python -m test.project_test
+        python -m test.project_test 2>&1 | sed 's+/home/user/++g'
         echo 'All test went ok'
       "
     volumes:
