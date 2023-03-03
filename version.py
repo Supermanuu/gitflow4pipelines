@@ -154,7 +154,7 @@ def get_cli_options(cmd_args):
     '''Parses command line arguments and returns a dictionary'''
     if sys.version_info[0] == 2:
         from dotdict import Dotdict
-        if len(cmd_args) > 1:
+        if len(cmd_args) > 0:
             args = Dotdict({
                 'major'     : cmd_args[0] == '-1' or cmd_args[0] == '--major',
                 'minor'     : cmd_args[0] == '-2' or cmd_args[0] == '--minor',
