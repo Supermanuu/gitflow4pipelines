@@ -97,7 +97,7 @@ def get_first_normalized_version():
                         pass
 
 
-def get_version(from_tag = False):
+def get_version(build_id = None, from_tag = False):
     if from_tag:
         version = get_first_normalized_tag()
     else:
@@ -111,6 +111,9 @@ def get_version(from_tag = False):
 
     if version == None:
         raise RuntimeError('No version could be parsed')
+
+    if not from_tag:
+        version['build'] = build_id if build_id != None else ''
 
     return version
 
@@ -197,9 +200,7 @@ if __name__ == '__main__':
 
     args = get_cli_options(sys.argv[1:])
 
-    version = get_version(args.tag)
-    if not args.tag:
-        version['build'] = build_id if build_id != None else '0'
+    version = get_version(build_id, args.tag)
     if args.major:
         print(version['major'])
     elif args.minor: 
