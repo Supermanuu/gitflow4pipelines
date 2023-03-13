@@ -130,6 +130,11 @@ class Test_get_version(unittest.TestCase):
         self.assertEqual(version.get_version(), {'major':'1', 'minor':'0', 'patch':'3', 'revision':'1', 'build':'', 'identifier':''})
         self.assertEqual(version.get_version(from_tag=True), {'major':'1', 'minor':'0', 'patch':'3', 'revision':'1', 'build':'200', 'identifier':''})
 
+    def test_15flashbackTagAndBuild(self):
+        self.assertEqual(subprocess.call('git tag 1.0.3.1-201'.split(' ')), 0)
+        self.assertEqual(version.get_version(build_id='12'), {'major':'1', 'minor':'0', 'patch':'3', 'revision':'1', 'build':'12', 'identifier':''})
+        self.assertEqual(version.get_version(build_id='12', from_tag=True), {'major':'1', 'minor':'0', 'patch':'3', 'revision':'1', 'build':'200', 'identifier':''})
+
 
 class Test_get_version_from_current_branch(unittest.TestCase):
     def test_format00(self):
