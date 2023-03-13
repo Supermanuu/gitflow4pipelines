@@ -21,7 +21,7 @@ RUN mkdir -p /home/root/workdir/
 WORKDIR /home/root/workdir/
 
 # Adding workdir to git safe list
-RUN git config --global --add safe.directory /home/root/workdir
+RUN git config --global --add safe.directory '*'
 
 # Disabling host ssh fingerprint checking
 COPY avoidHostKeyCheking.conf /etc/ssh/ssh_config.d/
