@@ -28,7 +28,7 @@ def getControlFile():
 
     return '\
 Package: ' + project.get_name(project_name_suffix) + '\n\
-Version: ' + version.format_version(version.get_version(), True, build_id, user_id) + '\n\
+Version: ' + version.format_version(version.get_version(), deb_version=True, build_id=build_id, user_id=user_id) + '\n\
 Section: ' + defaultIfNone(section, 'apps') + '\n\
 Priority: ' + defaultIfNone(priority, 'optional') + '\n\
 Maintainer: ' + defaultIfNone(maintainer, 'SEDECAL') + '\n\
